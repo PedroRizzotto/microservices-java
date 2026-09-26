@@ -16,9 +16,7 @@ public class ProductEntity {
     private double price;
     private String image;
 
-
-    public ProductEntity(Long id) {
-        this.id = id;
+    public ProductEntity() {
     }
 
     public ProductEntity(Long id, String brand, String model, String description, String currency, double price, String image) {

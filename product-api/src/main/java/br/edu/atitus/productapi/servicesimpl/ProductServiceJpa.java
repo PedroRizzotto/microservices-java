@@ -20,17 +20,17 @@ public class ProductServiceJpa implements ProductService {
         this.repository = repository;
     }
 
-    @Value("8000")
+    @Value("${server.port:8080}")
     private String serverPort;
 
     @Value("${app.promotion.message:Nenhuma Promoção Ativa}")
     private String promotionMessage;
 
+
     @Override
     public ProductResponse findById(Long id, String targetCurrency) throws Exception {
         var product = repository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Produto não encontrado"));
-
         String environment = "Product API running in port " + serverPort;
         return ProductResponse.fromEntity(
                 product,

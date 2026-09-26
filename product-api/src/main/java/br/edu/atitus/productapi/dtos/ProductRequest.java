@@ -5,7 +5,7 @@ public record ProductRequest(
         String model,
         String description,
         String currency,
-        String price,
+        double price,
         String image
 ) {
 }

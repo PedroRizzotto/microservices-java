@@ -7,7 +7,6 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -29,21 +28,22 @@ public class ProductController {
         return ResponseEntity.ok(response);
     }
 
+
     @GetMapping
     public ResponseEntity<Page<ProductResponse>> getAll(
             @RequestParam String targetCurrency,
-            @PageableDefault(size = 10, sort = "description", page = 0) Pageable pageable
+            @PageableDefault(size = 10, sort = "description",page = 0)Pageable pageable
     ) throws Exception {
         var response = service.findAll(pageable, targetCurrency);
         return ResponseEntity.ok(response);
     }
 
     @ExceptionHandler(EntityNotFoundException.class)
-    public ResponseEntity<String> entityNotFoundExceptionHandler(EntityNotFoundException ex) {
+    public ResponseEntity<String> entityNotFoundExceptionHandler(EntityNotFoundException ex){
         return ResponseEntity.status(404).body(ex.getMessage());
     }
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<String> exceptionHandler(Exception ex) {
-        return ResponseEntity.status(500).body("Ops!!! Algo deu errado");
+    public ResponseEntity<String> exceptionHandler(Exception ex){
+        return ResponseEntity.status(500).body("Ops!!! Algo deu errado.");
     }
 }
