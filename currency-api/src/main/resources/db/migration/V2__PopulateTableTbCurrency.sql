@@ -1,0 +1,11 @@
+INSERT INTO tb_currency (source_currency, target_currency, conversion_rate) VALUES
+  ('USD', 'BRL', 5.15),   -- Real (Brasil)
+  ('USD', 'EUR', 0.87),   -- Euro (UniÃ£o Europeia)
+  ('USD', 'GBP', 0.75),   -- Libra Esterlina (Reino Unido)
+  ('USD', 'ARS', 1510.45),-- Peso (Argentina)
+  ('USD', 'CLP', 954.61), -- Peso (Chile)
+  ('USD', 'COP', 3182.76),-- Peso (ColÃ´mbia)
+  ('USD', 'MXN', 17.19),  -- Peso (MÃ©xico)
+  ('USD', 'PEN', 3.37),   -- Sol (Peru)
+  ('USD', 'UYU', 40.23),  -- Peso (Uruguai)
+  ('USD', 'PYG', 6012.86);-- Guarani (Paraguai)
