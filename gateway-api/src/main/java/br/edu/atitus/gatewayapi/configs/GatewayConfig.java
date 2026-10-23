@@ -21,6 +21,23 @@ public class GatewayConfig {
                         .path("/currencies/**")
                         .uri("lb://currency-api"))
 
+                .route("auth-api", route -> route
+                        .path("/auth/**")
+                        .uri("lb://auth-api"))
+
+                // Rotas Protegidas (/ws/**)
+                .route("product-api-ws", route -> route
+                        .path("/ws/products/**")
+                        .uri("lb://product-api"))
+
+                .route("currency-api-ws", route -> route
+                        .path("/ws/currencies/**")
+                        .uri("lb://currency-api"))
+
+                .route("auth-api-ws", route -> route
+                        .path("/ws/auth/**")
+                        .uri("lb://auth-api"))
+
                 .build();
     }
 }
