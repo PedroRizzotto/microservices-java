@@ -79,6 +79,12 @@ consul kv put config/currency-api/resilience4j.circuitbreaker.circuit-breaker-as
 # Data fixa usada na consulta ao Banco Central (formato MM-dd-yyyy)
 consul kv put config/currency-api/app.bcb.data-cotacao "10-15-2026"
 
+# Configuração do Auth API
+consul kv put config/auth-api/server.port "8200"
+consul kv put config/auth-api/spring.datasource.url "jdbc:postgresql://localhost/db_user"
+consul kv put config/auth-api/spring.datasource.username "postgres"
+consul kv put config/auth-api/spring.datasource.password "postgres"
+
 echo
 echo "Consul iniciado e configuracoes carregadas! UI: http://localhost:8500"
 echo "Logs em consul.log. Ctrl+C para parar."
