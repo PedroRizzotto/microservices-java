@@ -134,6 +134,18 @@ put "config/order-api/spring.datasource.username" "postgres"
 put "config/order-api/spring.datasource.password" "postgres"
 
 
+# ==========================================================
+# AGENDA API
+# ==========================================================
+
+put "config/agenda-api/server.port" "8400"
+
+# Banco de dados
+put "config/agenda-api/spring.datasource.url" \
+    "jdbc:postgresql://agenda-db:5432/db_agenda"
+put "config/agenda-api/spring.datasource.username" "postgres"
+put "config/agenda-api/spring.datasource.password" "postgres"
+
 
 # ==========================================================
 # FINALIZAÇÃO

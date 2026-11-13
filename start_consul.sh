@@ -91,6 +91,12 @@ consul kv put config/order-api/spring.datasource.url "jdbc:postgresql://localhos
 consul kv put config/order-api/spring.datasource.username "postgres"
 consul kv put config/order-api/spring.datasource.password "postgres"
 
+# Configuração do Agenda API
+consul kv put config/agenda-api/server.port "8400"
+consul kv put config/agenda-api/spring.datasource.url "jdbc:postgresql://localhost/db_agenda"
+consul kv put config/agenda-api/spring.datasource.username "postgres"
+consul kv put config/agenda-api/spring.datasource.password "postgres"
+
 echo
 echo "Consul iniciado e configuracoes carregadas! UI: http://localhost:8500"
 echo "Logs em consul.log. Ctrl+C para parar."

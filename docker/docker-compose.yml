@@ -120,6 +120,27 @@ services:
     restart: unless-stopped
 
   # ==========================================================
+  # BANCO DE DADOS - AGENDA API
+  # ==========================================================
+  agenda-db:
+    image: postgres:17
+    container_name: agenda-db
+    environment:
+      POSTGRES_DB: db_agenda
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - agenda_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d db_agenda"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - backend
+    restart: unless-stopped
+
+  # ==========================================================
   # PRODUCT API
   # ==========================================================
   product-api:
@@ -206,6 +227,26 @@ services:
     restart: unless-stopped
 
   # ==========================================================
+  # AGENDA API
+  # ==========================================================
+  agenda-api:
+    build:
+      context: ../agenda-api
+    container_name: agenda-api
+    environment:
+      SPRING_CONFIG_IMPORT: "consul:"
+      SPRING_CLOUD_CONSUL_HOST: consul
+      SPRING_CLOUD_CONSUL_PORT: 8500
+    depends_on:
+      consul-config:
+        condition: service_completed_successfully
+      agenda-db:
+        condition: service_healthy
+    networks:
+      - backend
+    restart: unless-stopped
+
+  # ==========================================================
   # GATEWAY API
   # ==========================================================
   gateway-api:
@@ -241,3 +282,4 @@ volumes:
   currency_data:
   auth_data:
   order_data:
+  agenda_data:

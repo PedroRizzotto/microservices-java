@@ -25,6 +25,10 @@ public class GatewayConfig {
                         .path("/auth/**")
                         .uri("lb://auth-api"))
 
+                .route("agenda-api", route -> route
+                        .path("/agenda/**")
+                        .uri("lb://agenda-api"))
+
                 // Rotas Protegidas (/ws/**)
                 .route("product-api-ws", route -> route
                         .path("/ws/products/**")
@@ -41,6 +45,10 @@ public class GatewayConfig {
                 .route("order-api-ws", route -> route
                         .path("/ws/orders/**")
                         .uri("lb://order-api"))
+
+                .route("agenda-api-ws", route -> route
+                        .path("/ws/agenda/**")
+                        .uri("lb://agenda-api"))
 
                 .build();
     }
