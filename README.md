@@ -8,6 +8,7 @@ Backend do Projeto Integrador feito com Java 25 e Spring Boot 4, usando microser
 - auth-api (porta 8200): cadastro, login e geração do token. Banco db_user
 - product-api (porta 8000): produtos. Banco db_product
 - currency-api (porta 8100): conversão de moedas usando a API do Banco Central. Banco db_currency
+- order-api (porta 8300): pedidos do usuário autenticado, consulta o product-api e o currency-api pelo Consul. Banco db_order
 
 O Consul (porta 8500) é usado para o registro dos serviços e para as configurações.
 
@@ -28,6 +29,8 @@ Rotas públicas:
 Rotas protegidas:
 
 - POST /ws/products (somente admin)
+- POST /ws/orders
+- GET /ws/orders?targetCurrency=BRL (paginado, só os pedidos do usuário do token)
 
 ## Como rodar
 
@@ -39,13 +42,14 @@ Precisa ter Java 25, PostgreSQL e Consul instalados.
 CREATE DATABASE db_user;
 CREATE DATABASE db_product;
 CREATE DATABASE db_currency;
+CREATE DATABASE db_order;
 ```
 
 O usuário e a senha do banco estão como postgres/postgres no start_consul.bat e no start_consul.sh, se for diferente é só alterar lá.
 
 2. Rodar o `start_consul.bat` (Windows) ou o `start_consul.sh` (Mac/Linux).
 
-3. Subir os serviços: auth-api, currency-api, product-api e gateway-api (pela IDE ou com `./mvnw spring-boot:run` dentro de cada pasta).
+3. Subir os serviços: auth-api, currency-api, product-api, order-api e gateway-api (pela IDE ou com `./mvnw spring-boot:run` dentro de cada pasta).
 
 Na primeira execução do auth-api é criado o usuário admin@admin.dev com a senha teste.
 
@@ -79,3 +83,19 @@ POST /auth/signup
 ```
 
 Depois é só fazer o login com ele em /auth/signin e usar o token na requisição de cadastro de produto.
+
+Cadastro de pedido (o cliente vem do token, não vai no corpo):
+
+```
+POST /ws/orders
+{ "items": [ { "productId": 2, "quantity": 2 }, { "productId": 4, "quantity": 3 } ] }
+```
+
+Consulta dos pedidos do usuário logado, com os valores convertidos:
+
+```
+GET /ws/orders?targetCurrency=BRL
+```
+
+- sem token: 401
+- com token: 201 no cadastro e 200 na consulta, cada usuário vê só os próprios pedidos

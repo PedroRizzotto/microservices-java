@@ -122,6 +122,20 @@ put "config/auth-api/spring.datasource.password" "postgres"
 
 
 # ==========================================================
+# ORDER API
+# ==========================================================
+
+put "config/order-api/server.port" "8300"
+
+# Banco de dados
+put "config/order-api/spring.datasource.url" \
+    "jdbc:postgresql://order-db:5432/db_order"
+put "config/order-api/spring.datasource.username" "postgres"
+put "config/order-api/spring.datasource.password" "postgres"
+
+
+
+# ==========================================================
 # FINALIZAÇÃO
 # ==========================================================
 

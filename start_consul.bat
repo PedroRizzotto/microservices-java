@@ -79,6 +79,12 @@ consul kv put config/auth-api/spring.datasource.url "jdbc:postgresql://localhost
 consul kv put config/auth-api/spring.datasource.username "postgres"
 consul kv put config/auth-api/spring.datasource.password "postgres"
 
+REM Configuração do Order API
+consul kv put config/order-api/server.port "8300"
+consul kv put config/order-api/spring.datasource.url "jdbc:postgresql://localhost/db_order"
+consul kv put config/order-api/spring.datasource.username "postgres"
+consul kv put config/order-api/spring.datasource.password "postgres"
+
 echo.
 echo Consul iniciado e configuracoes carregadas!
 pause

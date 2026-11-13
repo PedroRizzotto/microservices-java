@@ -99,6 +99,27 @@ services:
     restart: unless-stopped
 
   # ==========================================================
+  # BANCO DE DADOS - ORDER API
+  # ==========================================================
+  order-db:
+    image: postgres:17
+    container_name: order-db
+    environment:
+      POSTGRES_DB: db_order
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - order_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d db_order"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - backend
+    restart: unless-stopped
+
+  # ==========================================================
   # PRODUCT API
   # ==========================================================
   product-api:
@@ -165,6 +186,26 @@ services:
     restart: unless-stopped
 
   # ==========================================================
+  # ORDER API
+  # ==========================================================
+  order-api:
+    build:
+      context: ../order-api
+    container_name: order-api
+    environment:
+      SPRING_CONFIG_IMPORT: "consul:"
+      SPRING_CLOUD_CONSUL_HOST: consul
+      SPRING_CLOUD_CONSUL_PORT: 8500
+    depends_on:
+      consul-config:
+        condition: service_completed_successfully
+      order-db:
+        condition: service_healthy
+    networks:
+      - backend
+    restart: unless-stopped
+
+  # ==========================================================
   # GATEWAY API
   # ==========================================================
   gateway-api:
@@ -199,3 +240,4 @@ volumes:
   product_data:
   currency_data:
   auth_data:
+  order_data:
