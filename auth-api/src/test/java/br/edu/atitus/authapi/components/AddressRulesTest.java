@@ -48,6 +48,14 @@ class AddressRulesTest {
     }
 
     @Test
+    void recusaCamposLongos() {
+        var label = AddressRules.normalize(new AddressRequest("x".repeat(51), "99010000", "Rua A", "10", null, "Centro", "Passo Fundo", "RS"));
+        assertEquals(400, assertThrows(ResponseStatusException.class, () -> AddressRules.validate(label)).getStatusCode().value());
+        var numero = AddressRules.normalize(new AddressRequest("Casa", "99010000", "Rua A", "1".repeat(21), null, "Centro", "Passo Fundo", "RS"));
+        assertEquals(400, assertThrows(ResponseStatusException.class, () -> AddressRules.validate(numero)).getStatusCode().value());
+    }
+
+    @Test
     void requireOwnerRecusaOutroUsuario() {
         AddressEntity a = new AddressEntity();
         a.setUserId(7L);

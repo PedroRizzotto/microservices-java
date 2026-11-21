@@ -42,7 +42,7 @@ public class StockServiceJpa implements StockService {
     }
 
     private Map<Long, ProductEntity> load(Map<Long, Integer> wanted) {
-        return repository.findAllByIdIn(wanted.keySet()).stream()
+        return repository.findAllByIdInOrderByIdAsc(wanted.keySet()).stream()
                 .collect(Collectors.toMap(ProductEntity::getId, Function.identity()));
     }
 }

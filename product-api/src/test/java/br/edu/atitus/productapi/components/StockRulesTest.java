@@ -63,6 +63,12 @@ class StockRulesTest {
     }
 
     @Test
+    void mergeRecusaSomaQueEstoura() {
+        var itens = List.of(new StockItemRequest(1L, Integer.MAX_VALUE), new StockItemRequest(1L, Integer.MAX_VALUE));
+        assertEquals(400, assertThrows(ResponseStatusException.class, () -> StockRules.merge(itens)).getStatusCode().value());
+    }
+
+    @Test
     void releaseDevolveEstoque() {
         var produtos = Map.of(1L, produto(1, 1, 1, true));
         StockRules.release(Map.of(1L, 4), produtos);

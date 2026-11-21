@@ -39,6 +39,16 @@ class ProductRulesTest {
     }
 
     @Test
+    void recusaMoedaInvalida() {
+        for (String moeda : new String[]{"RE", "R$1"}) {
+            var r = new ProductRequest("Ração", null, null, "desc", null, moeda, 10, 1, null);
+            assertEquals(400, assertThrows(ResponseStatusException.class, () -> ProductRules.validate(r)).getStatusCode().value());
+        }
+        var ok = new ProductRequest("Ração", null, null, "desc", null, " brl ", 10, 1, null);
+        assertDoesNotThrow(() -> ProductRules.validate(ok));
+    }
+
+    @Test
     void requireOwnerRecusaOutroPrestador() {
         ProductEntity p = new ProductEntity();
         p.setProviderId(2L);

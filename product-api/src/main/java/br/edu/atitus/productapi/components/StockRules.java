@@ -14,6 +14,9 @@ import java.util.Objects;
 
 public class StockRules {
 
+    private StockRules() {
+    }
+
     // Soma quantidades repetidas do mesmo produto, mantendo a ordem do pedido
     public static Map<Long, Integer> merge(List<StockItemRequest> items) {
         if (items == null || items.isEmpty())
@@ -24,7 +27,11 @@ public class StockRules {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Item inválido");
             if (item.quantity() <= 0)
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Quantidade inválida");
-            wanted.merge(item.productId(), item.quantity(), Integer::sum);
+            try {
+                wanted.merge(item.productId(), item.quantity(), Math::addExact);
+            } catch (ArithmeticException e) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Quantidade inválida");
+            }
         }
         return wanted;
     }

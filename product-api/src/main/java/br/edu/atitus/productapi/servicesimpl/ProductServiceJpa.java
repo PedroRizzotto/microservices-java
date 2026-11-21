@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class ProductServiceJpa implements ProductService {
@@ -85,11 +86,17 @@ public class ProductServiceJpa implements ProductService {
             spec = spec.and((root, query, cb) ->
                     cb.like(cb.lower(root.get("name")), "%" + search.trim().toLowerCase() + "%"));
         if (category != null && !category.isBlank())
-            spec = spec.and((root, query, cb) -> cb.equal(root.get("category"), category.trim()));
+            spec = spec.and((root, query, cb) -> cb.equal(root.get("category"), category.trim().toLowerCase()));
 
         String environment = "Product API running in port " + serverPort;
         return repository.findAll(spec, pageable)
                 .map(entity -> getResponse(entity, environment, targetCurrency));
+    }
+
+    private static String normalizeCategory(String category) {
+        if (category == null || category.isBlank())
+            return null;
+        return category.trim().toLowerCase();
     }
 
     private void fill(ProductEntity product, ProductRequest request) {
@@ -97,10 +104,10 @@ public class ProductServiceJpa implements ProductService {
         product.setBrand(request.brand() != null ? request.brand().trim() : null);
         product.setModel(request.model() != null ? request.model().trim() : null);
         product.setDescription(request.description().trim());
-        product.setCategory(request.category() != null ? request.category().trim() : null);
+        product.setCategory(normalizeCategory(request.category()));
         product.setPrice(request.price());
         product.setStock(request.stock());
-        product.setCurrency(request.currency().trim());
+        product.setCurrency(request.currency().trim().toUpperCase());
         product.setImage(request.image() != null ? request.image().trim() : null);
     }
 
@@ -123,8 +130,9 @@ public class ProductServiceJpa implements ProductService {
     }
 
     @Override
+    @Transactional
     public ProductEntity update(Long providerId, Long id, ProductRequest request) {
-        var product = repository.findById(id).orElse(null);
+        var product = repository.findWithLockById(id).orElse(null);
         ProductRules.requireOwner(product, providerId);
         ProductRules.validate(request);
 
@@ -133,8 +141,9 @@ public class ProductServiceJpa implements ProductService {
     }
 
     @Override
+    @Transactional
     public void deactivate(Long providerId, Long id) {
-        var product = repository.findById(id).orElse(null);
+        var product = repository.findWithLockById(id).orElse(null);
         ProductRules.requireOwner(product, providerId);
 
         product.setActive(false);

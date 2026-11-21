@@ -237,3 +237,8 @@ Cada item é testável sozinho pelo gateway antes de seguir.
 - Nomes exatos de classes, DTOs e métodos, seguindo o padrão do projeto.
 - Dados de exemplo (seed) de pet shop e produtos para o prestador de teste.
 - Tamanho padrão das páginas e textos das mensagens de erro.
+
+## Pendências para a fase 3 (order-api)
+
+- Reserva/devolução de estoque não são idempotentes: o order-api NÃO configura retry nessas duas chamadas (só timeout e circuit breaker) e só compensa (release) em falha definida; reserve pode responder 404 (produto inexistente/inativo) ou 409 (loja diferente/estoque).
+- Leitura de pedidos e carrinho não pode depender de o produto estar ativo: pedidos usam os dados copiados no checkout (nome, preço, moeda); carrinho mostra item como indisponível quando o product-api responder 404, em vez de falhar. O GET /ws/orders atual quebra (500) para produtos apagados/desativados até a fase 3.

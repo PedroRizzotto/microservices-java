@@ -7,6 +7,9 @@ import org.springframework.web.server.ResponseStatusException;
 
 public class ProductRules {
 
+    private ProductRules() {
+    }
+
     public static void validate(ProductRequest r) {
         if (r == null)
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Requisição inválida");
@@ -14,7 +17,7 @@ public class ProductRules {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Nome inválido");
         if (r.description() == null || r.description().isBlank())
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Descrição inválida");
-        if (r.currency() == null || r.currency().isBlank())
+        if (r.currency() == null || !r.currency().trim().matches("[A-Za-z]{3}"))
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Moeda inválida");
         if (r.price() <= 0)
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Preço inválido");

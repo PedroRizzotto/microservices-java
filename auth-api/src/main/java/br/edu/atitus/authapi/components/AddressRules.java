@@ -23,6 +23,9 @@ public class AddressRules {
     }
 
     public static void validate(AddressRequest r) {
+        if (tooLong(r.label(), 50) || tooLong(r.number(), 20) || tooLong(r.street(), 255)
+                || tooLong(r.complement(), 255) || tooLong(r.district(), 255) || tooLong(r.city(), 255))
+            throw bad("Campo excede o tamanho máximo");
         if (r.zipCode() == null || !r.zipCode().matches("\\d{8}"))
             throw bad("CEP deve ter 8 dígitos");
         if (isBlank(r.street()))
@@ -44,6 +47,10 @@ public class AddressRules {
 
     private static String trim(String s) {
         return s == null ? null : s.trim();
+    }
+
+    private static boolean tooLong(String s, int max) {
+        return s != null && s.length() > max;
     }
 
     private static boolean isBlank(String s) {
