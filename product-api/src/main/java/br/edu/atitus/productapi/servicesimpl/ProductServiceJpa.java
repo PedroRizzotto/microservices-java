@@ -1,5 +1,6 @@
 package br.edu.atitus.productapi.servicesimpl;
 
+import br.edu.atitus.productapi.components.ProductRules;
 import br.edu.atitus.productapi.dtos.ProductRequest;
 import br.edu.atitus.productapi.dtos.ProductResponse;
 import br.edu.atitus.productapi.entities.ProductEntity;
@@ -9,9 +10,7 @@ import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class ProductServiceJpa implements ProductService {
@@ -79,24 +78,16 @@ public class ProductServiceJpa implements ProductService {
 
     @Override
     public ProductEntity save(ProductRequest request) throws Exception {
-        if (request == null)
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Requisição inválida");
-        if (request.brand() == null || request.brand().isBlank())
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Marca inválida");
-        if (request.model() == null || request.model().isBlank())
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Modelo inválido");
-        if (request.description() == null || request.description().isBlank())
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Descrição inválida");
-        if (request.price() <= 0)
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Preço inválido");
-        if (request.currency() == null || request.currency().isBlank())
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Moeda inválida");
+        ProductRules.validate(request);
 
         var product = new ProductEntity();
-        product.setBrand(request.brand().trim());
-        product.setModel(request.model().trim());
+        product.setName(request.name().trim());
+        product.setBrand(request.brand() != null ? request.brand().trim() : null);
+        product.setModel(request.model() != null ? request.model().trim() : null);
         product.setDescription(request.description().trim());
+        product.setCategory(request.category() != null ? request.category().trim() : null);
         product.setPrice(request.price());
+        product.setStock(request.stock());
         product.setCurrency(request.currency().trim());
         product.setImage(request.image() != null ? request.image().trim() : null);
 

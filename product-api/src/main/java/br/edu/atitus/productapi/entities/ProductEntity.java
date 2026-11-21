@@ -1,5 +1,6 @@
 package br.edu.atitus.productapi.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 @Entity
@@ -9,24 +10,22 @@ public class ProductEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    private String name;
     private String brand;
     private String model;
     private String description;
+    private String category;
     private String currency;
     private double price;
+    private int stock;
+    private boolean active = true;
     private String image;
 
-    public ProductEntity() {
-    }
+    @JsonIgnore
+    private Long providerId;
+    private Long establishmentId;
 
-    public ProductEntity(Long id, String brand, String model, String description, String currency, double price, String image) {
-        this.id = id;
-        this.brand = brand;
-        this.model = model;
-        this.description = description;
-        this.currency = currency;
-        this.price = price;
-        this.image = image;
+    public ProductEntity() {
     }
 
     public Long getId() {
@@ -83,5 +82,53 @@ public class ProductEntity {
 
     public void setImage(String image) {
         this.image = image;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getCategory() {
+        return category;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
+    }
+
+    public int getStock() {
+        return stock;
+    }
+
+    public void setStock(int stock) {
+        this.stock = stock;
+    }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
+    }
+
+    public Long getProviderId() {
+        return providerId;
+    }
+
+    public void setProviderId(Long providerId) {
+        this.providerId = providerId;
+    }
+
+    public Long getEstablishmentId() {
+        return establishmentId;
+    }
+
+    public void setEstablishmentId(Long establishmentId) {
+        this.establishmentId = establishmentId;
     }
 }
