@@ -50,6 +50,10 @@ public class GatewayConfig {
                         .path("/ws/agenda/**")
                         .uri("lb://agenda-api"))
 
+                .route("payment-api-ws", route -> route
+                        .path("/ws/payments/**")
+                        .uri("lb://payment-api"))
+
                 .build();
     }
 }

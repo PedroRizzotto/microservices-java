@@ -97,6 +97,12 @@ consul kv put config/agenda-api/spring.datasource.url "jdbc:postgresql://localho
 consul kv put config/agenda-api/spring.datasource.username "postgres"
 consul kv put config/agenda-api/spring.datasource.password "postgres"
 
+# Configuração do Payment API
+consul kv put config/payment-api/server.port "8700"
+consul kv put config/payment-api/spring.datasource.url "jdbc:postgresql://localhost/db_payment"
+consul kv put config/payment-api/spring.datasource.username "postgres"
+consul kv put config/payment-api/spring.datasource.password "postgres"
+
 echo
 echo "Consul iniciado e configuracoes carregadas! UI: http://localhost:8500"
 echo "Logs em consul.log. Ctrl+C para parar."

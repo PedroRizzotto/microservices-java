@@ -148,6 +148,18 @@ put "config/agenda-api/spring.datasource.password" "postgres"
 
 
 # ==========================================================
+# PAYMENT API
+# ==========================================================
+
+put "config/payment-api/server.port" "8700"
+
+# Banco de dados
+put "config/payment-api/spring.datasource.url"     "jdbc:postgresql://payment-db:5432/db_payment"
+put "config/payment-api/spring.datasource.username" "postgres"
+put "config/payment-api/spring.datasource.password" "postgres"
+
+
+# ==========================================================
 # FINALIZAÇÃO
 # ==========================================================
 

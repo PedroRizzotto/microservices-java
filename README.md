@@ -10,6 +10,7 @@ Backend do Projeto Integrador feito com Java 25 e Spring Boot 4, usando microser
 - currency-api (porta 8100): conversão de moedas usando a API do Banco Central. Banco db_currency
 - order-api (porta 8300): pedidos do usuário autenticado, consulta o product-api e o currency-api pelo Consul. Banco db_order
 - agenda-api (porta 8400): pet shops, serviços, horários de atendimento e agendamentos. Banco db_agenda
+- payment-api (porta 8700): pagamento simulado (sempre aprovado), chamado internamente pelos outros serviços, e histórico de pagamentos do usuário. Banco db_payment
 
 O Consul (porta 8500) é usado para o registro dos serviços e para as configurações.
 
@@ -48,6 +49,7 @@ Rotas protegidas:
 - POST /ws/agenda/appointments
 - GET /ws/agenda/appointments
 - PATCH /ws/agenda/appointments/{id}/cancel
+- GET /ws/payments (paginado, pagamentos do usuário logado)
 
 ## Como rodar
 
@@ -61,13 +63,14 @@ CREATE DATABASE db_product;
 CREATE DATABASE db_currency;
 CREATE DATABASE db_order;
 CREATE DATABASE db_agenda;
+CREATE DATABASE db_payment;
 ```
 
 O usuário e a senha do banco estão como postgres/postgres no start_consul.bat e no start_consul.sh, se for diferente é só alterar lá.
 
 2. Rodar o `start_consul.bat` (Windows) ou o `start_consul.sh` (Mac/Linux).
 
-3. Subir os serviços: auth-api, currency-api, product-api, order-api, agenda-api e gateway-api (pela IDE ou com `./mvnw spring-boot:run` dentro de cada pasta).
+3. Subir os serviços: auth-api, currency-api, product-api, order-api, agenda-api, payment-api e gateway-api (pela IDE ou com `./mvnw spring-boot:run` dentro de cada pasta).
 
 Na primeira execução do auth-api é criado o prestador provider@provider.dev com a senha teste.
 
