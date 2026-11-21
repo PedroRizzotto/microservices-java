@@ -5,6 +5,9 @@ import br.edu.atitus.productapi.entities.ProductEntity;
 import br.edu.atitus.productapi.services.ProductService;
 import br.edu.atitus.productapi.servicesimpl.AuthorizationService;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
@@ -24,15 +27,46 @@ public class WsProductController {
     public ResponseEntity<ProductEntity> postProduct(
             @RequestBody ProductRequest dto,
             @RequestHeader("X-User-Id") Long userId,
-            @RequestHeader("X-User-Email") String userEmail,
-            @RequestHeader("X-User-Type") Integer userType) throws Exception {
+            @RequestHeader("X-User-Type") Integer userType) {
 
-        // Valida se o usuário é administrador
-        authService.requireAdmin(userType);
+        authService.requireProvider(userType);
 
-        var product = service.save(dto);
+        return ResponseEntity.status(201).body(service.create(userId, dto));
+    }
 
-        return ResponseEntity.status(201).body(product);
+    @PutMapping("/{id}")
+    public ResponseEntity<ProductEntity> putProduct(
+            @PathVariable Long id,
+            @RequestBody ProductRequest dto,
+            @RequestHeader("X-User-Id") Long userId,
+            @RequestHeader("X-User-Type") Integer userType) {
+
+        authService.requireProvider(userType);
+
+        return ResponseEntity.ok(service.update(userId, id, dto));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteProduct(
+            @PathVariable Long id,
+            @RequestHeader("X-User-Id") Long userId,
+            @RequestHeader("X-User-Type") Integer userType) {
+
+        authService.requireProvider(userType);
+
+        service.deactivate(userId, id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/mine")
+    public ResponseEntity<Page<ProductEntity>> getMine(
+            @RequestHeader("X-User-Id") Long userId,
+            @RequestHeader("X-User-Type") Integer userType,
+            @PageableDefault(size = 10, sort = "name", page = 0) Pageable pageable) {
+
+        authService.requireProvider(userType);
+
+        return ResponseEntity.ok(service.findMine(userId, pageable));
     }
 
     @ExceptionHandler(ResponseStatusException.class)

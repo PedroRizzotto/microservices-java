@@ -32,9 +32,12 @@ public class ProductController {
     @GetMapping
     public ResponseEntity<Page<ProductResponse>> getAll(
             @RequestParam String targetCurrency,
-            @PageableDefault(size = 10, sort = "description",page = 0)Pageable pageable
+            @RequestParam(required = false) Long establishmentId,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String category,
+            @PageableDefault(size = 10, sort = "name", page = 0) Pageable pageable
     ) throws Exception {
-        var response = service.findAll(pageable, targetCurrency);
+        var response = service.search(establishmentId, search, category, pageable, targetCurrency);
         return ResponseEntity.ok(response);
     }
 

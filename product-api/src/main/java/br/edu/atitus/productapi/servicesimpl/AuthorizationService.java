@@ -6,8 +6,8 @@ import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class AuthorizationService {
-    public void requireAdmin(Integer userType) {
-        if (userType == null || userType != 0)
+    public void requireProvider(Integer userType) {
+        if (userType == null || userType != 2)
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Usuário sem permissão para esta operação");
     }
 }

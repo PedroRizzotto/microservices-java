@@ -1,5 +1,6 @@
 package br.edu.atitus.productapi.servicesimpl;
 
+import br.edu.atitus.productapi.clients.AgendaClient;
 import br.edu.atitus.productapi.components.ProductRules;
 import br.edu.atitus.productapi.dtos.ProductRequest;
 import br.edu.atitus.productapi.dtos.ProductResponse;
@@ -7,6 +8,10 @@ import br.edu.atitus.productapi.entities.ProductEntity;
 import br.edu.atitus.productapi.repositories.ProductRepository;
 import br.edu.atitus.productapi.services.ProductService;
 import jakarta.persistence.EntityNotFoundException;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -17,12 +22,15 @@ public class ProductServiceJpa implements ProductService {
 
     private final ProductRepository repository;
     private final CurrencyClientService currencyClientService;
+    private final AgendaClient agendaClient;
 
     public ProductServiceJpa(
             ProductRepository repository,
-            CurrencyClientService currencyClientService) {
+            CurrencyClientService currencyClientService,
+            AgendaClient agendaClient) {
         this.repository = repository;
         this.currencyClientService = currencyClientService;
+        this.agendaClient = agendaClient;
     }
 
     @Value("${server.port:8080}")
@@ -58,8 +66,9 @@ public class ProductServiceJpa implements ProductService {
 
 
     @Override
-    public ProductResponse findById(Long id, String targetCurrency) throws Exception {
+    public ProductResponse findById(Long id, String targetCurrency) {
         var product = repository.findById(id)
+                .filter(ProductEntity::isActive)
                 .orElseThrow(() -> new EntityNotFoundException("Produto não encontrado"));
         String environment = "Product API running in port " + serverPort;
 
@@ -67,20 +76,23 @@ public class ProductServiceJpa implements ProductService {
     }
 
     @Override
-    public Page<ProductResponse> findAll(Pageable pageable, String targetCurrency) throws Exception {
-        var products = repository.findAll(pageable);
-        String environment = "Product API running in port " + serverPort;
+    public Page<ProductResponse> search(Long establishmentId, String search, String category, Pageable pageable, String targetCurrency) {
+        // Specification porque, com @Query e parametro nulo, o Postgres reclama do tipo do parametro
+        Specification<ProductEntity> spec = (root, query, cb) -> cb.isTrue(root.get("active"));
+        if (establishmentId != null)
+            spec = spec.and((root, query, cb) -> cb.equal(root.get("establishmentId"), establishmentId));
+        if (search != null && !search.isBlank())
+            spec = spec.and((root, query, cb) ->
+                    cb.like(cb.lower(root.get("name")), "%" + search.trim().toLowerCase() + "%"));
+        if (category != null && !category.isBlank())
+            spec = spec.and((root, query, cb) -> cb.equal(root.get("category"), category.trim()));
 
-        return products.map(
-                entity -> getResponse(entity, environment, targetCurrency)
-        );
+        String environment = "Product API running in port " + serverPort;
+        return repository.findAll(spec, pageable)
+                .map(entity -> getResponse(entity, environment, targetCurrency));
     }
 
-    @Override
-    public ProductEntity save(ProductRequest request) throws Exception {
-        ProductRules.validate(request);
-
-        var product = new ProductEntity();
+    private void fill(ProductEntity product, ProductRequest request) {
         product.setName(request.name().trim());
         product.setBrand(request.brand() != null ? request.brand().trim() : null);
         product.setModel(request.model() != null ? request.model().trim() : null);
@@ -90,7 +102,47 @@ public class ProductServiceJpa implements ProductService {
         product.setStock(request.stock());
         product.setCurrency(request.currency().trim());
         product.setImage(request.image() != null ? request.image().trim() : null);
+    }
 
+    @Override
+    public ProductEntity create(Long providerId, ProductRequest request) {
+        ProductRules.validate(request);
+
+        Long establishmentId;
+        try {
+            establishmentId = agendaClient.getByProvider(providerId).id();
+        } catch (HttpClientErrorException.NotFound e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cadastre seu pet shop antes de cadastrar produtos");
+        }
+
+        var product = new ProductEntity();
+        fill(product, request);
+        product.setProviderId(providerId);
+        product.setEstablishmentId(establishmentId);
         return repository.save(product);
+    }
+
+    @Override
+    public ProductEntity update(Long providerId, Long id, ProductRequest request) {
+        var product = repository.findById(id).orElse(null);
+        ProductRules.requireOwner(product, providerId);
+        ProductRules.validate(request);
+
+        fill(product, request);
+        return repository.save(product);
+    }
+
+    @Override
+    public void deactivate(Long providerId, Long id) {
+        var product = repository.findById(id).orElse(null);
+        ProductRules.requireOwner(product, providerId);
+
+        product.setActive(false);
+        repository.save(product);
+    }
+
+    @Override
+    public Page<ProductEntity> findMine(Long providerId, Pageable pageable) {
+        return repository.findAllByProviderIdAndActiveTrue(providerId, pageable);
     }
 }

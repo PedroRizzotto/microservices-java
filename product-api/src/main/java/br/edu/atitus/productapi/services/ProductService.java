@@ -7,7 +7,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 public interface ProductService {
-    ProductResponse findById(Long id, String targetCurrency) throws Exception;
-    Page<ProductResponse> findAll(Pageable pageable, String targetCurrency) throws Exception;
-    ProductEntity save(ProductRequest request) throws Exception;
- }
+    ProductResponse findById(Long id, String targetCurrency);
+    Page<ProductResponse> search(Long establishmentId, String search, String category, Pageable pageable, String targetCurrency);
+    ProductEntity create(Long providerId, ProductRequest r);
+    ProductEntity update(Long providerId, Long id, ProductRequest r);
+    void deactivate(Long providerId, Long id);
+    Page<ProductEntity> findMine(Long providerId, Pageable pageable);
+}
