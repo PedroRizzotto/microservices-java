@@ -1,5 +1,6 @@
 package br.edu.atitus.authapi.entities;
 
+import br.edu.atitus.authapi.components.UserTypeConverter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
@@ -22,6 +23,7 @@ public class UserEntity implements UserDetails {
     private String name;
     @JsonIgnore
     private String password;
+    @Convert(converter = UserTypeConverter.class)
     private UserType type;
 
     public Long getId() {
@@ -73,4 +75,4 @@ public class UserEntity implements UserDetails {
     public void setType(UserType type) {
         this.type = type;
     }
-}
+}

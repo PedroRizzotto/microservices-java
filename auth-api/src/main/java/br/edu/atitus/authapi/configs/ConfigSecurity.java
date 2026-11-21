@@ -18,7 +18,6 @@ public class ConfigSecurity {
         http.csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/ws**", "/ws/**").authenticated()
                         .anyRequest().permitAll());
         return http.build();
     }

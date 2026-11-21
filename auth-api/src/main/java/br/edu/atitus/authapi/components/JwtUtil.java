@@ -25,7 +25,7 @@ public class JwtUtil {
         Map<String, Object> claims = new HashMap<>();
         claims.put("id", id);
         claims.put("email", email);
-        claims.put("type", type.ordinal());
+        claims.put("type", type.getCode());
         return Jwts.builder()
                 //.subject(email) // Define o "sub" com o email do usuário
                 .claims(claims)
@@ -58,4 +58,4 @@ public class JwtUtil {
         return null;
     }
 
-}
+}
