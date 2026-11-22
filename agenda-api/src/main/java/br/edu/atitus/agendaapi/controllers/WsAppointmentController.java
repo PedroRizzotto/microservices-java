@@ -1,6 +1,7 @@
 package br.edu.atitus.agendaapi.controllers;
 
 import br.edu.atitus.agendaapi.dtos.AppointmentRequest;
+import br.edu.atitus.agendaapi.dtos.PayRequest;
 import br.edu.atitus.agendaapi.entities.AppointmentEntity;
 import br.edu.atitus.agendaapi.services.AppointmentService;
 import br.edu.atitus.agendaapi.servicesimpl.AuthorizationService;
@@ -59,6 +60,27 @@ public class WsAppointmentController {
             @RequestHeader("X-User-Email") String userEmail,
             @RequestHeader("X-User-Type") Integer userType) {
         return ResponseEntity.ok(service.cancel(id, userId));
+    }
+
+    @PostMapping("/{id}/pay")
+    public ResponseEntity<AppointmentEntity> pay(
+            @PathVariable Long id,
+            @RequestBody PayRequest dto,
+            @RequestHeader("X-User-Id") Long userId,
+            @RequestHeader("X-User-Email") String userEmail,
+            @RequestHeader("X-User-Type") Integer userType) {
+        authService.requireCustomer(userType);
+        return ResponseEntity.ok(service.pay(userId, id, dto.method()));
+    }
+
+    @PatchMapping("/{id}/complete")
+    public ResponseEntity<AppointmentEntity> complete(
+            @PathVariable Long id,
+            @RequestHeader("X-User-Id") Long userId,
+            @RequestHeader("X-User-Email") String userEmail,
+            @RequestHeader("X-User-Type") Integer userType) {
+        authService.requireProvider(userType);
+        return ResponseEntity.ok(service.complete(userId, id));
     }
 
     @ExceptionHandler(ResponseStatusException.class)

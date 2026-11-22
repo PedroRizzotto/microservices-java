@@ -189,6 +189,18 @@ put "config/agenda-api/spring.datasource.url" \
 put "config/agenda-api/spring.datasource.username" "postgres"
 put "config/agenda-api/spring.datasource.password" "postgres"
 
+put "config/agenda-api/resilience4j.retry.instances.payment-api.max-attempts" "3"
+put "config/agenda-api/resilience4j.retry.instances.payment-api.wait-duration" "1s"
+put "config/agenda-api/resilience4j.retry.instances.payment-api.ignore-exceptions" "io.github.resilience4j.circuitbreaker.CallNotPermittedException,org.springframework.web.client.HttpClientErrorException,org.springframework.web.server.ResponseStatusException"
+put "config/agenda-api/resilience4j.circuitbreaker.instances.payment-api.sliding-window-type" "COUNT_BASED"
+put "config/agenda-api/resilience4j.circuitbreaker.instances.payment-api.sliding-window-size" "5"
+put "config/agenda-api/resilience4j.circuitbreaker.instances.payment-api.minimum-number-of-calls" "5"
+put "config/agenda-api/resilience4j.circuitbreaker.instances.payment-api.failure-rate-threshold" "50"
+put "config/agenda-api/resilience4j.circuitbreaker.instances.payment-api.wait-duration-in-open-state" "100s"
+put "config/agenda-api/resilience4j.circuitbreaker.instances.payment-api.ignore-exceptions" "io.github.resilience4j.circuitbreaker.CallNotPermittedException,org.springframework.web.client.HttpClientErrorException,org.springframework.web.server.ResponseStatusException"
+put "config/agenda-api/resilience4j.retry.retry-aspect-order" "100"
+put "config/agenda-api/resilience4j.circuitbreaker.circuit-breaker-aspect-order" "101"
+
 
 # ==========================================================
 # PAYMENT API

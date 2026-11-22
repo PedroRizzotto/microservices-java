@@ -151,6 +151,23 @@ consul kv put config/agenda-api/spring.datasource.url "jdbc:postgresql://localho
 consul kv put config/agenda-api/spring.datasource.username "postgres"
 consul kv put config/agenda-api/spring.datasource.password "postgres"
 
+# Resiliência da agenda-api ao chamar o payment-api
+consul kv put config/agenda-api/resilience4j.retry.instances.payment-api.max-attempts "3"
+consul kv put config/agenda-api/resilience4j.retry.instances.payment-api.wait-duration "1s"
+consul kv put "config/agenda-api/resilience4j.retry.instances.payment-api.ignore-exceptions[0]" "io.github.resilience4j.circuitbreaker.CallNotPermittedException"
+consul kv put "config/agenda-api/resilience4j.retry.instances.payment-api.ignore-exceptions[1]" "org.springframework.web.client.HttpClientErrorException"
+consul kv put "config/agenda-api/resilience4j.retry.instances.payment-api.ignore-exceptions[2]" "org.springframework.web.server.ResponseStatusException"
+consul kv put config/agenda-api/resilience4j.circuitbreaker.instances.payment-api.sliding-window-type "COUNT_BASED"
+consul kv put config/agenda-api/resilience4j.circuitbreaker.instances.payment-api.sliding-window-size "5"
+consul kv put config/agenda-api/resilience4j.circuitbreaker.instances.payment-api.minimum-number-of-calls "5"
+consul kv put config/agenda-api/resilience4j.circuitbreaker.instances.payment-api.failure-rate-threshold "50"
+consul kv put config/agenda-api/resilience4j.circuitbreaker.instances.payment-api.wait-duration-in-open-state "100s"
+consul kv put "config/agenda-api/resilience4j.circuitbreaker.instances.payment-api.ignore-exceptions[0]" "io.github.resilience4j.circuitbreaker.CallNotPermittedException"
+consul kv put "config/agenda-api/resilience4j.circuitbreaker.instances.payment-api.ignore-exceptions[1]" "org.springframework.web.client.HttpClientErrorException"
+consul kv put "config/agenda-api/resilience4j.circuitbreaker.instances.payment-api.ignore-exceptions[2]" "org.springframework.web.server.ResponseStatusException"
+consul kv put config/agenda-api/resilience4j.retry.retry-aspect-order "100"
+consul kv put config/agenda-api/resilience4j.circuitbreaker.circuit-breaker-aspect-order "101"
+
 # Configuração do Payment API
 consul kv put config/payment-api/server.port "8700"
 consul kv put config/payment-api/spring.datasource.url "jdbc:postgresql://localhost/db_payment"

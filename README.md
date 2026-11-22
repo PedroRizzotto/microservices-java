@@ -53,6 +53,8 @@ Rotas protegidas:
 - POST /ws/agenda/appointments
 - GET /ws/agenda/appointments
 - PATCH /ws/agenda/appointments/{id}/cancel
+- POST /ws/agenda/appointments/{id}/pay (cliente), corpo { "method": "PIX" }
+- PATCH /ws/agenda/appointments/{id}/complete (prestador)
 - GET /ws/payments (paginado, pagamentos do usuário logado)
 
 ## Como rodar

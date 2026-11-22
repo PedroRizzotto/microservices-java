@@ -17,5 +17,9 @@ public interface AppointmentService {
 
     AppointmentEntity cancel(Long appointmentId, Long userId);
 
+    AppointmentEntity pay(Long customerId, Long appointmentId, String method);
+
+    AppointmentEntity complete(Long providerId, Long appointmentId);
+
     List<String> freeSlots(Long establishmentId, Long serviceId, LocalDate date);
 }

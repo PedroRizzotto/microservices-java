@@ -46,6 +46,11 @@ public class AppointmentEntity {
     @Column(nullable = false)
     private AppointmentStatus status;
 
+    private Long paymentId;
+
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
+    private LocalDateTime paidAt;
+
     public AppointmentEntity() {
     }
 
@@ -127,5 +132,21 @@ public class AppointmentEntity {
 
     public void setStatus(AppointmentStatus status) {
         this.status = status;
+    }
+
+    public Long getPaymentId() {
+        return paymentId;
+    }
+
+    public void setPaymentId(Long paymentId) {
+        this.paymentId = paymentId;
+    }
+
+    public LocalDateTime getPaidAt() {
+        return paidAt;
+    }
+
+    public void setPaidAt(LocalDateTime paidAt) {
+        this.paidAt = paidAt;
     }
 }

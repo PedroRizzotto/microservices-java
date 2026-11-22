@@ -1,6 +1,9 @@
 package br.edu.atitus.agendaapi.servicesimpl;
 
 import br.edu.atitus.agendaapi.components.AgendaRules;
+import br.edu.atitus.agendaapi.components.AppointmentRules;
+import br.edu.atitus.agendaapi.dtos.PaymentRequest;
+import br.edu.atitus.agendaapi.dtos.PaymentResponse;
 import br.edu.atitus.agendaapi.dtos.AppointmentRequest;
 import br.edu.atitus.agendaapi.entities.AppointmentEntity;
 import br.edu.atitus.agendaapi.entities.AppointmentStatus;
@@ -23,25 +26,30 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Set;
 
 @Service
 public class AppointmentServiceJpa implements AppointmentService {
 
     private static final DateTimeFormatter HOUR_FORMAT = DateTimeFormatter.ofPattern("HH:mm");
+    private static final Set<String> METHODS = Set.of("PIX", "CREDIT_CARD", "DEBIT_CARD", "BOLETO");
 
     private final AppointmentRepository appointmentRepository;
     private final EstablishmentRepository establishmentRepository;
     private final PetServiceRepository petServiceRepository;
     private final AvailabilityRepository availabilityRepository;
+    private final IntegrationService integration;
 
     public AppointmentServiceJpa(AppointmentRepository appointmentRepository,
                                  EstablishmentRepository establishmentRepository,
                                  PetServiceRepository petServiceRepository,
-                                 AvailabilityRepository availabilityRepository) {
+                                 AvailabilityRepository availabilityRepository,
+                                 IntegrationService integration) {
         this.appointmentRepository = appointmentRepository;
         this.establishmentRepository = establishmentRepository;
         this.petServiceRepository = petServiceRepository;
         this.availabilityRepository = availabilityRepository;
+        this.integration = integration;
     }
 
     private EstablishmentEntity getEstablishment(Long establishmentId) {
@@ -120,6 +128,42 @@ public class AppointmentServiceJpa implements AppointmentService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Agendamento já cancelado");
 
         appointment.setStatus(AppointmentStatus.CANCELADO);
+        return appointmentRepository.save(appointment);
+    }
+
+    @Override
+    public AppointmentEntity pay(Long customerId, Long appointmentId, String method) {
+        if (method == null || !METHODS.contains(method))
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Método de pagamento inválido");
+        AppointmentEntity appointment = appointmentRepository.findById(appointmentId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Agendamento não encontrado"));
+        AppointmentRules.requirePayable(appointment, customerId);
+
+        PaymentResponse payment;
+        try {
+            payment = integration.createPayment(new PaymentRequest(
+                    "APPOINTMENT", appointment.getId(), customerId, method, appointment.getPriceAtBooking()));
+        } catch (ResponseStatusException e) {
+            throw e; // 4xx do payment-api segue como veio
+        } catch (RuntimeException e) {
+            // rede, circuit breaker aberto ou 5xx: o agendamento continua sem pagamento
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Pagamento indisponível, tente novamente");
+        }
+
+        appointment.setPaymentId(payment.id());
+        appointment.setPaidAt(AgendaRules.now());
+        return appointmentRepository.save(appointment);
+    }
+
+    @Override
+    public AppointmentEntity complete(Long providerId, Long appointmentId) {
+        EstablishmentEntity establishment = establishmentRepository.findByProviderId(providerId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cadastre o estabelecimento primeiro"));
+        AppointmentEntity appointment = appointmentRepository.findById(appointmentId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Agendamento não encontrado"));
+        AppointmentRules.requireCompletable(appointment, establishment.getId());
+
+        appointment.setStatus(AppointmentStatus.CONCLUIDO);
         return appointmentRepository.save(appointment);
     }
 
