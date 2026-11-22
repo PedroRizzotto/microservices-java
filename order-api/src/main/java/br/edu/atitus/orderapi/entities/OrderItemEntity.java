@@ -1,6 +1,5 @@
 package br.edu.atitus.orderapi.entities;
 
-import br.edu.atitus.orderapi.dtos.ProductResponse;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.persistence.Column;
@@ -22,18 +21,22 @@ public class OrderItemEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // ID do produto vindo do product-service
+    // ID do produto vindo do product-api
     @Column(nullable = false)
     private Long productId;
+
+    // Nome copiado do produto no momento da compra
+    @Column(nullable = false)
+    private String productName;
 
     @Column(nullable = false)
     private Integer quantity;
 
     @Column(nullable = false)
-    private double priceAtPurchase; // guarda o preço no momento da compra
+    private double priceAtPurchase; // preço unitário em BRL no momento da compra
 
     @Column(nullable = false)
-    private String currencyAtPurchase; // guarda a moeda no momento da compra
+    private String currencyAtPurchase; // sempre "BRL"
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "order_id")
@@ -41,10 +44,7 @@ public class OrderItemEntity {
     private OrderEntity order;
 
     @Transient
-    private ProductResponse product; // preenchido via chamada REST
-
-    @Transient
-    private double convertedPriceAtPruchase;
+    private double convertedPrice;
 
     public Long getId() {
         return id;
@@ -60,6 +60,14 @@ public class OrderItemEntity {
 
     public void setProductId(Long productId) {
         this.productId = productId;
+    }
+
+    public String getProductName() {
+        return productName;
+    }
+
+    public void setProductName(String productName) {
+        this.productName = productName;
     }
 
     public Integer getQuantity() {
@@ -94,21 +102,11 @@ public class OrderItemEntity {
         this.order = order;
     }
 
-    public ProductResponse getProduct() {
-        return product;
+    public double getConvertedPrice() {
+        return convertedPrice;
     }
 
-    public void setProduct(ProductResponse product) {
-        this.product = product;
+    public void setConvertedPrice(double convertedPrice) {
+        this.convertedPrice = convertedPrice;
     }
-
-    public double getConvertedPriceAtPruchase() {
-        return convertedPriceAtPruchase;
-    }
-
-    public void setConvertedPriceAtPruchase(double convertedPriceAtPruchase) {
-        this.convertedPriceAtPruchase = convertedPriceAtPruchase;
-    }
-
-
 }
