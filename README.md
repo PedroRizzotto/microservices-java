@@ -80,6 +80,22 @@ O usuário e a senha do banco estão como postgres/postgres no start_consul.bat 
 
 Na primeira execução do auth-api é criado o prestador provider@provider.dev com a senha teste.
 
+## Observabilidade
+
+A stack de observabilidade sobe junto com o `docker/docker-compose.yml` (`docker compose up --build -d`, dentro da pasta `docker`). Os 7 serviços exportam métricas em `/actuator/prometheus` e enviam traces ao Zipkin; as configurações ficam no Consul em `config/application`.
+
+| Ferramenta | URL | Função |
+| --- | --- | --- |
+| Zipkin | http://localhost:9411 | Distributed tracing |
+| Prometheus | http://localhost:9090 | Métricas (coleta a cada 15s) |
+| Grafana | http://localhost:3000 | Dashboards (usuário `admin`, senha `admin`) |
+| Loki | http://localhost:3100 | Logs centralizados (`/ready`, `/loki/api/v1/labels`) |
+| Grafana Alloy | http://localhost:12345/graph | Coleta os logs dos containers e envia ao Loki |
+
+No Grafana as fontes de dados (Prometheus, Loki e Zipkin) e o dashboard "Microservices Overview" (disponibilidade, requisições por segundo, taxa de erro 5xx, latência p95 e memória heap da JVM) já vêm provisionados. Em Explore dá para consultar os logs com `{job="docker"}` ou `{container_name=~".*order-api.*"}`.
+
+Rodando sem Docker, o `start_consul.bat`/`start_consul.sh` apontam o tracing para `http://localhost:9411/api/v2/spans`; se não houver Zipkin local os serviços funcionam normalmente, só sem os traces.
+
 ## Testes
 
 Todas as requisições são feitas no gateway (http://localhost:8080).

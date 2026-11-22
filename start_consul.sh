@@ -19,6 +19,13 @@ consul kv put config/application/management.health.livenessstate.enabled "true"
 consul kv put config/application/management.health.readinessstate.enabled "true"
 consul kv put config/application/management.health.db.enabled "true"
 
+# Observabilidade - métricas e tracing (Zipkin local na porta 9411)
+consul kv put config/application/management.prometheus.metrics.export.enabled "true"
+consul kv put config/application/management.metrics.distribution.percentiles-histogram.http.server.requests "true"
+consul kv put config/application/management.tracing.enabled "true"
+consul kv put config/application/management.tracing.sampling.probability "1.0"
+consul kv put config/application/management.tracing.export.zipkin.endpoint "http://localhost:9411/api/v2/spans"
+
 consul kv put config/product-api/server.port "8000"
 consul kv put config/product-api/spring.datasource.url "jdbc:postgresql://localhost/db_product"
 consul kv put config/product-api/spring.datasource.username "postgres"

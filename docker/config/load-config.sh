@@ -28,6 +28,22 @@ put "config/application/management.health.livenessstate.enabled" "true"
 put "config/application/management.health.readinessstate.enabled" "true"
 put "config/application/management.health.db.enabled" "true"
 
+# ==========================================================
+# OBSERVABILIDADE - MÉTRICAS E TRACING
+# ==========================================================
+
+# Métricas no formato do Prometheus
+put "config/application/management.prometheus.metrics.export.enabled" "true"
+# Histograma das requisições HTTP (usado no p95 do dashboard)
+put "config/application/management.metrics.distribution.percentiles-histogram.http.server.requests" "true"
+
+# Tracing
+put "config/application/management.tracing.enabled" "true"
+put "config/application/management.tracing.sampling.probability" "1.0"
+
+# Exportação dos traces para o Zipkin
+put "config/application/management.tracing.export.zipkin.endpoint" "http://zipkin:9411/api/v2/spans"
+
 
 # ==========================================================
 # PRODUCT API

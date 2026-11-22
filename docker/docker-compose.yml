@@ -307,6 +307,99 @@ services:
       - backend
     restart: unless-stopped
 
+  # ==========================================================
+  # ZIPKIN - DISTRIBUTED TRACING
+  # ==========================================================
+  zipkin:
+    image: openzipkin/zipkin:latest
+    container_name: zipkin
+    ports:
+      - "9411:9411"
+    restart: unless-stopped
+    networks:
+      - backend
+
+  # ==========================================================
+  # PROMETHEUS - METRICS COLLECTION
+  # ==========================================================
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+    restart: unless-stopped
+    networks:
+      - backend
+
+  # ==========================================================
+  # LOKI - LOG AGGREGATION
+  # ==========================================================
+  loki:
+    image: grafana/loki:3.7.0
+    container_name: loki
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./loki/loki-config.yaml:/etc/loki/config.yaml:ro
+      - loki_data:/loki
+    command:
+      - "-config.file=/etc/loki/config.yaml"
+    restart: unless-stopped
+    networks:
+      - backend
+
+  # ==========================================================
+  # GRAFANA ALLOY - LOG COLLECTION
+  # ==========================================================
+  alloy:
+    image: grafana/alloy:latest
+    container_name: alloy
+    ports:
+      - "12345:12345"
+    volumes:
+      - ./alloy/config.alloy:/etc/alloy/config.alloy:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+      - alloy_data:/var/lib/alloy/data
+    command:
+      - run
+      - --server.http.listen-addr=0.0.0.0:12345
+      - --storage.path=/var/lib/alloy/data
+      - /etc/alloy/config.alloy
+    depends_on:
+      - loki
+    restart: unless-stopped
+    networks:
+      - backend
+
+  # ==========================================================
+  # GRAFANA - OBSERVABILITY DASHBOARDS
+  # ==========================================================
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    depends_on:
+      - prometheus
+      - loki
+      - zipkin
+    restart: unless-stopped
+    networks:
+      - backend
+
 # ============================================================
 # REDE INTERNA
 # ============================================================
@@ -325,3 +418,7 @@ volumes:
   order_data:
   agenda_data:
   payment_data:
+  prometheus_data:
+  loki_data:
+  alloy_data:
+  grafana_data:
