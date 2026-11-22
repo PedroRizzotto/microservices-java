@@ -114,8 +114,20 @@ class CheckoutServiceJpaTest {
         assertEquals("RS", order.getDeliveryState());
         assertTrue(cart.getItems().isEmpty());
         assertEquals(null, cart.getEstablishmentId());
-        verify(cartRepository).save(cart);
+        verify(cartRepository).saveAndFlush(cart);
         verify(integration, never()).releaseStock(any());
+    }
+
+    @Test
+    void devolveEstoqueSeFalharAoGravarOCarrinho() {
+        when(cartRepository.findByCustomerId(CUSTOMER)).thenReturn(Optional.of(cartWithItems()));
+        when(integration.findAddress(ADDRESS, CUSTOMER)).thenReturn(Optional.of(address()));
+        when(integration.reserveStock(stockRequest())).thenReturn(reserved());
+        when(cartRepository.saveAndFlush(any(CartEntity.class))).thenThrow(new IllegalStateException("falha no flush"));
+
+        assertThrows(IllegalStateException.class, () -> service.checkout(CUSTOMER, ADDRESS));
+
+        verify(integration, Mockito.times(1)).releaseStock(stockRequest());
     }
 
     @Test

@@ -58,7 +58,8 @@ public class CheckoutServiceJpa implements CheckoutService {
             cart.getItems().clear();
             cart.setEstablishmentId(null);
             cart.setUpdatedAt(LocalDateTime.now());
-            cartRepository.save(cart);
+            // flush dentro do try: deletes/updates do carrinho também ficam cobertos pela devolução do estoque
+            cartRepository.saveAndFlush(cart);
             return order;
         } catch (RuntimeException e) {
             try {
