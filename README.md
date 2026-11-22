@@ -40,8 +40,12 @@ Rotas protegidas:
 - POST /ws/products (prestador)
 - PUT /ws/products/{id}, DELETE /ws/products/{id} (prestador, só os próprios produtos; o DELETE desativa o produto)
 - GET /ws/products/mine (prestador, paginado)
-- POST /ws/orders
-- GET /ws/orders?targetCurrency=BRL (paginado, só os pedidos do usuário do token)
+- GET /ws/orders?targetCurrency=BRL (cliente, paginado, só os pedidos do usuário do token)
+- GET /ws/orders/{id}?targetCurrency=BRL (cliente)
+- POST /ws/orders/{id}/pay (cliente)
+- PATCH /ws/orders/{id}/cancel (cliente, só pedido aguardando pagamento)
+- GET /ws/orders/received?status=PAID (prestador, paginado)
+- PATCH /ws/orders/{id}/status (prestador)
 - PUT /ws/agenda/establishment, GET /ws/agenda/establishment (prestador)
 - POST /ws/agenda/services, DELETE /ws/agenda/services/{id} (prestador)
 - PUT /ws/agenda/availability, GET /ws/agenda/availability (prestador)
@@ -132,21 +136,41 @@ DELETE /ws/auth/addresses/1
 GET /ws/auth/me
 ```
 
-Cadastro de pedido (o cliente vem do token, não vai no corpo):
+Fluxo de compra (cliente logado, o usuário vem do token):
 
 ```
-POST /ws/orders
-{ "items": [ { "productId": 2, "quantity": 2 }, { "productId": 4, "quantity": 3 } ] }
+POST /ws/auth/addresses
+{ "label": "Casa", "zipCode": "99010-000", "street": "Rua A", "number": "10", "district": "Centro", "city": "Passo Fundo", "state": "RS" }
+
+POST /ws/orders/cart/items
+{ "productId": 2, "quantity": 2 }
+
+POST /ws/orders/checkout
+{ "addressId": 1 }
+
+POST /ws/orders/1/pay
+{ "method": "PIX" }
+
+GET /ws/orders/1?targetCurrency=USD
 ```
 
-Consulta dos pedidos do usuário logado, com os valores convertidos:
+- o checkout cria o pedido como PENDING_PAYMENT e reserva o estoque; o carrinho é de uma loja só
+- o pagamento (PIX, CREDIT_CARD, DEBIT_CARD ou BOLETO) é aprovado pelo payment-api e o pedido vira PAID; se o payment-api estiver fora, 503 e o pedido continua pendente
+- PATCH /ws/orders/1/cancel só funciona com o pedido pendente (senão 409) e devolve o estoque
+- GET /ws/orders e GET /ws/orders/{id} mostram os valores gravados no pedido, convertidos para o targetCurrency, sem consultar o product-api
+- pedido de outro cliente: 404; rotas de cliente com token de prestador: 403
+
+O prestador acompanha e envia os pedidos da loja dele:
 
 ```
-GET /ws/orders?targetCurrency=BRL
+GET /ws/orders/received?status=PAID
+
+PATCH /ws/orders/1/status
+{ "status": "SHIPPED" }
 ```
 
-- sem token: 401
-- com token: 201 no cadastro e 200 na consulta, cada usuário vê só os próprios pedidos
+- só avança PAID -> SHIPPED -> DELIVERED, qualquer outra transição é 409
+- pedido de outro prestador: 404; cliente nessas rotas: 403
 
 Agenda, logado com o provider@provider.dev:
 
