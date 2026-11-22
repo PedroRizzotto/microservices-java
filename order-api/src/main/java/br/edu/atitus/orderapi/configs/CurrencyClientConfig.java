@@ -29,7 +29,8 @@ public class CurrencyClientConfig {
         requestFactory.setConnectTimeout(Duration.ofSeconds(1));
         requestFactory.setReadTimeout(Duration.ofSeconds(2));
 
-        RestClient restClient = builder
+        // clone() para não alterar o builder compartilhado entre os clientes
+        RestClient restClient = builder.clone()
                 .baseUrl("http://currency-api")
                 .requestFactory(requestFactory)
                 .build();

@@ -1,8 +1,6 @@
 package br.edu.atitus.orderapi.configs;
 
 import br.edu.atitus.orderapi.clients.ProductClient;
-import org.springframework.boot.restclient.autoconfigure.RestClientBuilderConfigurer;
-import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
@@ -16,13 +14,14 @@ import java.time.Duration;
 public class ProductClientConfig {
 
     @Bean
-    ProductClient getClientProduct(RestClient.Builder builder) {
+    ProductClient getProductClient(RestClient.Builder builder) {
         SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
 
         requestFactory.setConnectTimeout(Duration.ofSeconds(1));
         requestFactory.setReadTimeout(Duration.ofSeconds(2));
 
-        RestClient restClient = builder
+        // clone() para não alterar o builder compartilhado entre os clientes
+        RestClient restClient = builder.clone()
                 .baseUrl("http://product-api")
                 .requestFactory(requestFactory)
                 .build();
