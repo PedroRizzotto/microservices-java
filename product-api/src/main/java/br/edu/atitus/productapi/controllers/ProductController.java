@@ -2,7 +2,6 @@ package br.edu.atitus.productapi.controllers;
 
 import br.edu.atitus.productapi.dtos.ProductResponse;
 import br.edu.atitus.productapi.services.ProductService;
-import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -39,14 +38,5 @@ public class ProductController {
     ) throws Exception {
         var response = service.search(establishmentId, search, category, pageable, targetCurrency);
         return ResponseEntity.ok(response);
-    }
-
-    @ExceptionHandler(EntityNotFoundException.class)
-    public ResponseEntity<String> entityNotFoundExceptionHandler(EntityNotFoundException ex){
-        return ResponseEntity.status(404).body(ex.getMessage());
-    }
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<String> exceptionHandler(Exception ex){
-        return ResponseEntity.status(500).body("Ops!!! Algo deu errado.- "+ ex.getMessage());
     }
 }

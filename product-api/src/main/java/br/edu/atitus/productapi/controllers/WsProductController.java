@@ -10,7 +10,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("/ws/products")
@@ -67,19 +66,5 @@ public class WsProductController {
         authService.requireProvider(userType);
 
         return ResponseEntity.ok(service.findMine(userId, pageable));
-    }
-
-    @ExceptionHandler(ResponseStatusException.class)
-    public ResponseEntity<String> handleResponseStatusException(
-            ResponseStatusException e) {
-
-        return ResponseEntity
-                .status(e.getStatusCode())
-                .body(e.getReason());
-    }
-
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<String> exceptionHandler(Exception ex){
-        return ResponseEntity.status(500).body("Ops!!! Algo deu errado. - " + ex.getMessage());
     }
 }

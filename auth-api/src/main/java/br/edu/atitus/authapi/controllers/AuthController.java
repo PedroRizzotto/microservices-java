@@ -10,12 +10,10 @@ import br.edu.atitus.authapi.services.UserService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.web.bind.annotation.*;
 
-import javax.naming.AuthenticationException;
 
 @RestController
 @RequestMapping("/auth")
@@ -52,24 +50,12 @@ public class AuthController {
     }
 
     @PostMapping("/signin")
-    public ResponseEntity<SigninResponseDto> PostSignin(@RequestBody SigninRequestDto signin) throws AuthenticationException, Exception {
+    public ResponseEntity<SigninResponseDto> PostSignin(@RequestBody SigninRequestDto signin) throws Exception {
         authConfig.getAuthenticationManager()
                 .authenticate(new UsernamePasswordAuthenticationToken(signin.email(), signin.password()));
         UserEntity user = (UserEntity) userService.loadUserByUsername(signin.email());
         SigninResponseDto response = new SigninResponseDto(user, JwtUtil.generateToken(user.getEmail(), user.getId(), user.getType()));
         return ResponseEntity.ok(response);
 
-    }
-
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<String> handleException(Exception e) {
-        String cleanMessage = e.getMessage().replaceAll("[\\r\\n]", " ");
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(cleanMessage);
-    }
-
-    @ExceptionHandler(AuthenticationException.class)
-    public ResponseEntity<String> handleException(AuthenticationException e) {
-        String cleanMessage = e.getMessage().replaceAll("[\\r\\n]", " ");
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(cleanMessage);
     }
 }

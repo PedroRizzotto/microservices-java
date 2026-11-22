@@ -6,6 +6,7 @@ import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.stereotype.Component;
@@ -32,6 +33,11 @@ public class AuthFilter implements GlobalFilter, Ordered {
 
         // Obter a rota solicitada.
         String path = request.getURI().getPath();
+
+        // Preflight de CORS (OPTIONS) não leva token: segue sem exigir identidade.
+        if (HttpMethod.OPTIONS.equals(request.getMethod())) {
+            return chain.filter(exchange.mutate().request(sanitizedRequest).build());
+        }
 
         // Rotas Públicas: seguem sem identidade propagada.
         if (PROTECTED_ROUTES.stream().noneMatch(path::startsWith)) {

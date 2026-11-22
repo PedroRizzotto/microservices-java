@@ -23,14 +23,4 @@ public class InternalEstablishmentController {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Estabelecimento não encontrado"));
         return ResponseEntity.ok(establishment);
     }
-
-    @ExceptionHandler(ResponseStatusException.class)
-    public ResponseEntity<String> handleResponseStatusException(ResponseStatusException e) {
-        return ResponseEntity.status(e.getStatusCode()).body(e.getReason());
-    }
-
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<String> exceptionHandler(Exception ex) {
-        return ResponseEntity.status(500).body("Ops!!! Algo deu errado. - " + ex.getMessage());
-    }
 }

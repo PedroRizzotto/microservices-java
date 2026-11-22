@@ -9,7 +9,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -43,15 +42,5 @@ public class AgendaController {
             @RequestParam Long serviceId,
             @RequestParam LocalDate date) {
         return ResponseEntity.ok(appointmentService.freeSlots(id, serviceId, date));
-    }
-
-    @ExceptionHandler(ResponseStatusException.class)
-    public ResponseEntity<String> handleResponseStatusException(ResponseStatusException e) {
-        return ResponseEntity.status(e.getStatusCode()).body(e.getReason());
-    }
-
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<String> exceptionHandler(Exception ex) {
-        return ResponseEntity.status(500).body("Ops!!! Algo deu errado. - " + ex.getMessage());
     }
 }
