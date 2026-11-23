@@ -16,6 +16,11 @@ public class AppointmentRules {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Agendamento já pago");
     }
 
+    public static void requireCancelable(AppointmentEntity appointment) {
+        if (appointment.getStatus() == AppointmentStatus.CONCLUIDO)
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Agendamento já concluído");
+    }
+
     public static void requireCompletable(AppointmentEntity appointment, Long establishmentId) {
         if (!appointment.getEstablishmentId().equals(establishmentId))
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Agendamento não encontrado");

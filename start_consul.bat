@@ -6,7 +6,7 @@ timeout /t 3 /nobreak > nul
 echo Carregando configuracoes...
 
 REM Configuração para todos os microserviços
-consul kv put config/application/management.endpoints.web.exposure.include "*"
+consul kv put config/application/management.endpoints.web.exposure.include "health,info,prometheus"
 consul kv put config/application/management.endpoint.health.show-components "always"
 consul kv put config/application/management.endpoint.health.show-details "always"
 consul kv put config/application/management.health.livenessstate.enabled "true"

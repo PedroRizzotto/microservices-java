@@ -74,4 +74,17 @@ class AppointmentRulesTest {
         assertEquals(HttpStatus.CONFLICT, e.getStatusCode());
         assertEquals("Agendamento não pode ser concluído", e.getReason());
     }
+
+    @Test
+    void cancelaAgendado() {
+        assertDoesNotThrow(() -> AppointmentRules.requireCancelable(appointment(AppointmentStatus.AGENDADO)));
+    }
+
+    @Test
+    void recusaCancelarConcluido() {
+        ResponseStatusException e = assertThrows(ResponseStatusException.class,
+                () -> AppointmentRules.requireCancelable(appointment(AppointmentStatus.CONCLUIDO)));
+        assertEquals(HttpStatus.CONFLICT, e.getStatusCode());
+        assertEquals("Agendamento já concluído", e.getReason());
+    }
 }

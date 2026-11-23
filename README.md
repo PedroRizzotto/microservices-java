@@ -27,7 +27,7 @@ Cada rota exige o tipo certo, senão retorna 403. Não existe usuário administr
 
 Todas as requisições passam pelo gateway (http://localhost:8080). As rotas que começam com `/ws/` são protegidas: o AuthFilter do gateway exige o header `Authorization: Bearer <token>`, valida o JWT e repassa os dados do usuário aos serviços pelos headers X-User-Id, X-User-Type e X-User-Email (os mesmos headers enviados pelo cliente são descartados). Sem token ou com token inválido retorna 401. O gateway também responde o preflight de CORS (OPTIONS) e libera qualquer origem.
 
-A autorização por tipo e por dono do recurso fica em cada microservice. Recurso de outro usuário retorna 404.
+A autorização por tipo e por dono do recurso fica em cada microservice. Recurso de outro usuário retorna 404 (a exceção é cancelar o agendamento de outro usuário, que responde 403).
 
 As rotas `/internal/**` são só para a comunicação entre os serviços e não existem no gateway, então não são acessíveis de fora.
 
@@ -146,7 +146,7 @@ Status do pedido: `PENDING_PAYMENT`, `PAID`, `SHIPPED`, `DELIVERED`, `CANCELED`.
 3. `POST /ws/agenda/appointments` cria o agendamento com status `AGENDADO`. Horário já ocupado: 409. Fora do horário de atendimento: 400.
 4. `POST /ws/agenda/appointments/{id}/pay` com `{ "method": "PIX" }` registra o pagamento no payment-api. Agendamento cancelado ou já pago: 409.
 5. O prestador conclui com `PATCH /ws/agenda/appointments/{id}/complete` (status `CONCLUIDO`). Agendamento que não está `AGENDADO`: 409.
-6. O cancelamento (`CANCELADO`) pode ser feito pelo cliente ou pelo prestador do pet shop.
+6. O cancelamento (`CANCELADO`) pode ser feito pelo cliente ou pelo prestador do pet shop. Agendamento já concluído não pode ser cancelado (409).
 
 ## Como rodar
 
@@ -207,5 +207,5 @@ Resumo do que esperar:
 
 - sem token nas rotas `/ws/`: 401
 - cliente nas rotas de prestador, ou prestador nas rotas de cliente: 403
-- recurso de outro usuário: 404
+- recurso de outro usuário: 404 (cancelar agendamento de outro usuário: 403)
 - item de outra loja no carrinho, pagar duas vezes, transição de status inválida, horário já ocupado: 409

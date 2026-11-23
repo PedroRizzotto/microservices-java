@@ -21,7 +21,7 @@ put() {
 # CONFIGURAÇÕES GERAIS - TODAS AS APLICAÇÕES
 # ==========================================================
 
-put "config/application/management.endpoints.web.exposure.include" "*"
+put "config/application/management.endpoints.web.exposure.include" "health,info,prometheus"
 put "config/application/management.endpoint.health.show-components" "always"
 put "config/application/management.endpoint.health.show-details" "always"
 put "config/application/management.health.livenessstate.enabled" "true"

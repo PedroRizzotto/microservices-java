@@ -19,6 +19,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
@@ -117,8 +118,9 @@ public class AppointmentServiceJpa implements AppointmentService {
     }
 
     @Override
+    @Transactional
     public AppointmentEntity cancel(Long appointmentId, Long userId) {
-        AppointmentEntity appointment = appointmentRepository.findById(appointmentId)
+        AppointmentEntity appointment = appointmentRepository.findWithLockById(appointmentId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Agendamento não encontrado"));
         EstablishmentEntity establishment = getEstablishment(appointment.getEstablishmentId());
 
@@ -126,23 +128,26 @@ public class AppointmentServiceJpa implements AppointmentService {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Usuário sem permissão para esta operação");
         if (appointment.getStatus() == AppointmentStatus.CANCELADO)
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Agendamento já cancelado");
+        AppointmentRules.requireCancelable(appointment);
 
         appointment.setStatus(AppointmentStatus.CANCELADO);
         return appointmentRepository.save(appointment);
     }
 
     @Override
+    @Transactional
     public AppointmentEntity pay(Long customerId, Long appointmentId, String method) {
-        if (method == null || !METHODS.contains(method))
+        String normalized = method == null ? null : method.trim().toUpperCase();
+        if (normalized == null || !METHODS.contains(normalized))
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Método de pagamento inválido");
-        AppointmentEntity appointment = appointmentRepository.findById(appointmentId)
+        AppointmentEntity appointment = appointmentRepository.findWithLockById(appointmentId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Agendamento não encontrado"));
         AppointmentRules.requirePayable(appointment, customerId);
 
         PaymentResponse payment;
         try {
             payment = integration.createPayment(new PaymentRequest(
-                    "APPOINTMENT", appointment.getId(), customerId, method, appointment.getPriceAtBooking()));
+                    "APPOINTMENT", appointment.getId(), customerId, normalized, appointment.getPriceAtBooking()));
         } catch (ResponseStatusException e) {
             throw e; // 4xx do payment-api segue como veio
         } catch (RuntimeException e) {
@@ -156,10 +161,11 @@ public class AppointmentServiceJpa implements AppointmentService {
     }
 
     @Override
+    @Transactional
     public AppointmentEntity complete(Long providerId, Long appointmentId) {
         EstablishmentEntity establishment = establishmentRepository.findByProviderId(providerId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cadastre o estabelecimento primeiro"));
-        AppointmentEntity appointment = appointmentRepository.findById(appointmentId)
+        AppointmentEntity appointment = appointmentRepository.findWithLockById(appointmentId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Agendamento não encontrado"));
         AppointmentRules.requireCompletable(appointment, establishment.getId());
 

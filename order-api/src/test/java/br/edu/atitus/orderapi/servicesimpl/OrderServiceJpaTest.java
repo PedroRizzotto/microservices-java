@@ -13,6 +13,7 @@ import br.edu.atitus.orderapi.entities.OrderStatus;
 import br.edu.atitus.orderapi.repositories.OrderRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.InOrder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -25,6 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -47,6 +49,7 @@ class OrderServiceJpaTest {
         integration = mock(IntegrationService.class);
         service = new OrderServiceJpa(orderRepository, integration);
         when(orderRepository.save(any(OrderEntity.class))).thenAnswer(i -> i.getArgument(0));
+        when(orderRepository.saveAndFlush(any(OrderEntity.class))).thenAnswer(i -> i.getArgument(0));
     }
 
     private OrderEntity order(OrderStatus status) {
@@ -75,6 +78,7 @@ class OrderServiceJpaTest {
 
     private void found(OrderEntity order) {
         when(orderRepository.findByIdAndCustomerId(ORDER_ID, CUSTOMER)).thenReturn(Optional.of(order));
+        when(orderRepository.findWithLockByIdAndCustomerId(ORDER_ID, CUSTOMER)).thenReturn(Optional.of(order));
     }
 
     @Test
@@ -140,7 +144,7 @@ class OrderServiceJpaTest {
 
         assertEquals(HttpStatus.BAD_REQUEST, e.getStatusCode());
         assertEquals("Método de pagamento inválido", e.getReason());
-        verify(orderRepository, never()).findByIdAndCustomerId(anyLong(), anyLong());
+        verify(orderRepository, never()).findWithLockByIdAndCustomerId(anyLong(), anyLong());
         verify(integration, never()).createPayment(any(PaymentRequest.class));
     }
 
@@ -167,6 +171,40 @@ class OrderServiceJpaTest {
     }
 
     @Test
+    void cancelarGravaStatusAntesDeDevolver() {
+        found(order(OrderStatus.PENDING_PAYMENT));
+
+        service.cancel(CUSTOMER, ORDER_ID);
+
+        InOrder inOrder = inOrder(orderRepository, integration);
+        inOrder.verify(orderRepository).saveAndFlush(any(OrderEntity.class));
+        inOrder.verify(integration).releaseStock(any());
+    }
+
+    @Test
+    void pagarUsaLeituraComLock() {
+        found(order(OrderStatus.PENDING_PAYMENT));
+        when(integration.createPayment(any(PaymentRequest.class)))
+                .thenReturn(new PaymentResponse(55L, "APPROVED", "TX1"));
+
+        service.pay(CUSTOMER, ORDER_ID, "PIX");
+
+        verify(orderRepository).findWithLockByIdAndCustomerId(ORDER_ID, CUSTOMER);
+    }
+
+    @Test
+    void aceitaMetodoMinusculo() {
+        found(order(OrderStatus.PENDING_PAYMENT));
+        when(integration.createPayment(any(PaymentRequest.class)))
+                .thenReturn(new PaymentResponse(55L, "APPROVED", "TX1"));
+
+        OrderEntity paid = service.pay(CUSTOMER, ORDER_ID, " pix ");
+
+        assertEquals(OrderStatus.PAID, paid.getStatus());
+        verify(integration).createPayment(new PaymentRequest("ORDER", ORDER_ID, CUSTOMER, "PIX", 110.0));
+    }
+
+    @Test
     void cancelarPagoRecusa409() {
         found(order(OrderStatus.PAID));
 
@@ -179,7 +217,7 @@ class OrderServiceJpaTest {
 
     @Test
     void prestadorDeOutraLoja404() {
-        when(orderRepository.findByIdAndProviderId(ORDER_ID, 99L)).thenReturn(Optional.empty());
+        when(orderRepository.findWithLockByIdAndProviderId(ORDER_ID, 99L)).thenReturn(Optional.empty());
 
         ResponseStatusException e = assertThrows(ResponseStatusException.class,
                 () -> service.updateStatus(99L, ORDER_ID, OrderStatus.SHIPPED));
@@ -190,14 +228,14 @@ class OrderServiceJpaTest {
     @Test
     void prestadorEnviaPedidoPago() {
         OrderEntity order = order(OrderStatus.PAID);
-        when(orderRepository.findByIdAndProviderId(ORDER_ID, PROVIDER)).thenReturn(Optional.of(order));
+        when(orderRepository.findWithLockByIdAndProviderId(ORDER_ID, PROVIDER)).thenReturn(Optional.of(order));
 
         assertEquals(OrderStatus.SHIPPED, service.updateStatus(PROVIDER, ORDER_ID, OrderStatus.SHIPPED).getStatus());
     }
 
     @Test
     void prestadorNaoPulaEtapa409() {
-        when(orderRepository.findByIdAndProviderId(ORDER_ID, PROVIDER))
+        when(orderRepository.findWithLockByIdAndProviderId(ORDER_ID, PROVIDER))
                 .thenReturn(Optional.of(order(OrderStatus.PAID)));
 
         ResponseStatusException e = assertThrows(ResponseStatusException.class,

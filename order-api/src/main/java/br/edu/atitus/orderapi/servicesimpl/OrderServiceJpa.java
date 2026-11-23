@@ -54,16 +54,17 @@ public class OrderServiceJpa implements OrderService {
     @Override
     @Transactional
     public OrderEntity pay(Long customerId, Long id, String method) {
-        if (method == null || !METHODS.contains(method))
+        String normalized = method == null ? null : method.trim().toUpperCase();
+        if (normalized == null || !METHODS.contains(normalized))
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Método de pagamento inválido");
-        OrderEntity order = orderRepository.findByIdAndCustomerId(id, customerId)
+        OrderEntity order = orderRepository.findWithLockByIdAndCustomerId(id, customerId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Pedido não encontrado"));
         OrderStatusRules.requirePayable(order.getStatus());
 
         PaymentResponse payment;
         try {
             payment = integration.createPayment(
-                    new PaymentRequest("ORDER", order.getId(), customerId, method, order.getTotalAmount()));
+                    new PaymentRequest("ORDER", order.getId(), customerId, normalized, order.getTotalAmount()));
         } catch (ResponseStatusException e) {
             throw e; // 4xx do payment-api segue como veio
         } catch (RuntimeException e) {
@@ -80,17 +81,19 @@ public class OrderServiceJpa implements OrderService {
     @Override
     @Transactional
     public OrderEntity cancel(Long customerId, Long id) {
-        OrderEntity order = orderRepository.findByIdAndCustomerId(id, customerId)
+        OrderEntity order = orderRepository.findWithLockByIdAndCustomerId(id, customerId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Pedido não encontrado"));
         OrderStatusRules.requireCancelable(order.getStatus());
 
         List<StockItemRequest> toRelease = order.getItems().stream()
                 .map(i -> new StockItemRequest(i.getProductId(), i.getQuantity()))
                 .toList();
-        integration.releaseStock(toRelease);
 
+        // Grava o status antes de devolver o estoque: se a devolução falhar, a transação desfaz o status
         order.setStatus(OrderStatus.CANCELED);
-        return orderRepository.save(order);
+        OrderEntity saved = orderRepository.saveAndFlush(order);
+        integration.releaseStock(toRelease);
+        return saved;
     }
 
     @Override
@@ -104,7 +107,7 @@ public class OrderServiceJpa implements OrderService {
     @Override
     @Transactional
     public OrderEntity updateStatus(Long providerId, Long id, OrderStatus to) {
-        OrderEntity order = orderRepository.findByIdAndProviderId(id, providerId)
+        OrderEntity order = orderRepository.findWithLockByIdAndProviderId(id, providerId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Pedido não encontrado"));
         OrderStatusRules.requireProviderTransition(order.getStatus(), to);
         order.setStatus(to);
