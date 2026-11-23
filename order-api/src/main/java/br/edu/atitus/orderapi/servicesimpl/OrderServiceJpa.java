@@ -57,7 +57,7 @@ public class OrderServiceJpa implements OrderService {
         String normalized = method == null ? null : method.trim().toUpperCase();
         if (normalized == null || !METHODS.contains(normalized))
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Método de pagamento inválido");
-        OrderEntity order = orderRepository.findWithLockByIdAndCustomerId(id, customerId)
+        OrderEntity order = orderRepository.findByIdAndCustomerId(id, customerId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Pedido não encontrado"));
         OrderStatusRules.requirePayable(order.getStatus());
 
@@ -66,9 +66,8 @@ public class OrderServiceJpa implements OrderService {
             payment = integration.createPayment(
                     new PaymentRequest("ORDER", order.getId(), customerId, normalized, order.getTotalAmount()));
         } catch (ResponseStatusException e) {
-            throw e; // 4xx do payment-api segue como veio
+            throw e;
         } catch (RuntimeException e) {
-            // rede, circuit breaker aberto ou 5xx: o pedido continua pendente
             throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Pagamento indisponível, tente novamente");
         }
 
@@ -81,7 +80,7 @@ public class OrderServiceJpa implements OrderService {
     @Override
     @Transactional
     public OrderEntity cancel(Long customerId, Long id) {
-        OrderEntity order = orderRepository.findWithLockByIdAndCustomerId(id, customerId)
+        OrderEntity order = orderRepository.findByIdAndCustomerId(id, customerId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Pedido não encontrado"));
         OrderStatusRules.requireCancelable(order.getStatus());
 
@@ -89,11 +88,9 @@ public class OrderServiceJpa implements OrderService {
                 .map(i -> new StockItemRequest(i.getProductId(), i.getQuantity()))
                 .toList();
 
-        // Grava o status antes de devolver o estoque: se a devolução falhar, a transação desfaz o status
-        order.setStatus(OrderStatus.CANCELED);
-        OrderEntity saved = orderRepository.saveAndFlush(order);
         integration.releaseStock(toRelease);
-        return saved;
+        order.setStatus(OrderStatus.CANCELED);
+        return orderRepository.save(order);
     }
 
     @Override
@@ -107,14 +104,13 @@ public class OrderServiceJpa implements OrderService {
     @Override
     @Transactional
     public OrderEntity updateStatus(Long providerId, Long id, OrderStatus to) {
-        OrderEntity order = orderRepository.findWithLockByIdAndProviderId(id, providerId)
+        OrderEntity order = orderRepository.findByIdAndProviderId(id, providerId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Pedido não encontrado"));
         OrderStatusRules.requireProviderTransition(order.getStatus(), to);
         order.setStatus(to);
         return orderRepository.save(order);
     }
 
-    // Os preços gravados são sempre BRL; uma consulta de câmbio por chamada basta
     private void applyConversion(List<OrderEntity> orders, String targetCurrency) {
         double rate = BRL.equals(targetCurrency) || orders.isEmpty()
                 ? 1.0

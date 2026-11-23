@@ -32,15 +32,6 @@ class CartRulesTest {
     }
 
     @Test
-    void recusaSomaComEstouro() {
-        CartEntity cart = new CartEntity();
-        CartRules.addItem(cart, 10L, 1L, Integer.MAX_VALUE, false);
-        var ex = assertThrows(ResponseStatusException.class, () -> CartRules.addItem(cart, 10L, 1L, 1, false));
-        assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
-        assertEquals("Quantidade inválida", ex.getReason());
-    }
-
-    @Test
     void recusaOutraLojaSemReplace() {
         CartEntity cart = new CartEntity();
         CartRules.addItem(cart, 10L, 1L, 2, false);

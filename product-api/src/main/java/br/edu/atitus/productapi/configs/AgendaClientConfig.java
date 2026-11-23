@@ -13,7 +13,6 @@ import java.time.Duration;
 @Configuration
 public class AgendaClientConfig {
 
-    // Reaproveita o RestClient.Builder @LoadBalanced definido no CurrencyClientConfig
     @Bean
     AgendaClient getAgendaClient(RestClient.Builder builder) {
         SimpleClientHttpRequestFactory requestFactory =

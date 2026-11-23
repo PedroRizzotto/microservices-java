@@ -8,7 +8,6 @@ import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
 
 import java.util.List;
 
-// CORS global: o CorsWebFilter responde o preflight (OPTIONS) antes das rotas e do AuthFilter
 @Configuration
 public class CorsConfig {
 

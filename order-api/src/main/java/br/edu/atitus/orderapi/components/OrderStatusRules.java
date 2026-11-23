@@ -9,7 +9,6 @@ public class OrderStatusRules {
     private OrderStatusRules() {
     }
 
-    // O prestador só avança o pedido: PAID -> SHIPPED -> DELIVERED
     public static void requireProviderTransition(OrderStatus from, OrderStatus to) {
         boolean valid = (from == OrderStatus.PAID && to == OrderStatus.SHIPPED)
                 || (from == OrderStatus.SHIPPED && to == OrderStatus.DELIVERED);

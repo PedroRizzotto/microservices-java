@@ -27,7 +27,6 @@ public class CartEntity {
     @JsonIgnore
     private Long customerId;
 
-    // Loja dos produtos do carrinho; null enquanto o carrinho está vazio
     private Long establishmentId;
 
     @Column(nullable = false)

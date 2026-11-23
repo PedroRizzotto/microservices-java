@@ -78,7 +78,6 @@ public class ProductServiceJpa implements ProductService {
 
     @Override
     public Page<ProductResponse> search(Long establishmentId, String search, String category, Pageable pageable, String targetCurrency) {
-        // Specification porque, com @Query e parametro nulo, o Postgres reclama do tipo do parametro
         Specification<ProductEntity> spec = (root, query, cb) -> cb.isTrue(root.get("active"));
         if (establishmentId != null)
             spec = spec.and((root, query, cb) -> cb.equal(root.get("establishmentId"), establishmentId));
@@ -132,7 +131,7 @@ public class ProductServiceJpa implements ProductService {
     @Override
     @Transactional
     public ProductEntity update(Long providerId, Long id, ProductRequest request) {
-        var product = repository.findWithLockById(id).orElse(null);
+        var product = repository.findById(id).orElse(null);
         ProductRules.requireOwner(product, providerId);
         ProductRules.validate(request);
 
@@ -143,7 +142,7 @@ public class ProductServiceJpa implements ProductService {
     @Override
     @Transactional
     public void deactivate(Long providerId, Long id) {
-        var product = repository.findWithLockById(id).orElse(null);
+        var product = repository.findById(id).orElse(null);
         ProductRules.requireOwner(product, providerId);
 
         product.setActive(false);

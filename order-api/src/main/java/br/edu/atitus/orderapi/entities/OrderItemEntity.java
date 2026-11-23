@@ -21,11 +21,9 @@ public class OrderItemEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // ID do produto vindo do product-api
     @Column(nullable = false)
     private Long productId;
 
-    // Nome copiado do produto no momento da compra
     @Column(nullable = false)
     private String productName;
 
@@ -33,10 +31,10 @@ public class OrderItemEntity {
     private Integer quantity;
 
     @Column(nullable = false)
-    private double priceAtPurchase; // preço unitário em BRL no momento da compra
+    private double priceAtPurchase;
 
     @Column(nullable = false)
-    private String currencyAtPurchase; // sempre "BRL"
+    private String currencyAtPurchase;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "order_id")

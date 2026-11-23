@@ -13,7 +13,6 @@ public class CurrencyConverter {
         this.integrationService = integrationService;
     }
 
-    // Converte para reais, arredondando em 2 casas; BRL não consulta o currency-api
     public double toBrl(double value, String currency) {
         if (BRL.equalsIgnoreCase(currency))
             return value;

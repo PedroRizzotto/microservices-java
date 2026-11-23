@@ -34,7 +34,6 @@ public class AuthFilter implements GlobalFilter, Ordered {
         // Obter a rota solicitada.
         String path = request.getURI().getPath();
 
-        // Preflight de CORS (OPTIONS) não leva token: segue sem exigir identidade.
         if (HttpMethod.OPTIONS.equals(request.getMethod())) {
             return chain.filter(exchange.mutate().request(sanitizedRequest).build());
         }

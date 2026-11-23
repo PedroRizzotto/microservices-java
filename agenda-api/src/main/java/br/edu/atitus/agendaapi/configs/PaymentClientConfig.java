@@ -28,7 +28,6 @@ public class PaymentClientConfig {
         requestFactory.setConnectTimeout(Duration.ofSeconds(1));
         requestFactory.setReadTimeout(Duration.ofSeconds(2));
 
-        // clone() para não alterar o builder compartilhado entre os clientes
         RestClient restClient = builder.clone()
                 .baseUrl("http://payment-api")
                 .requestFactory(requestFactory)

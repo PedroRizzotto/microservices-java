@@ -9,10 +9,9 @@ import br.edu.atitus.productapi.services.StockService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 @Service
 public class StockServiceJpa implements StockService {
@@ -27,7 +26,7 @@ public class StockServiceJpa implements StockService {
     public List<ReservedItemResponse> reserve(List<StockItemRequest> items) {
         Map<Long, Integer> wanted = StockRules.merge(items);
         Map<Long, ProductEntity> products = load(wanted);
-        var result = StockRules.reserve(wanted, products);
+        List<ReservedItemResponse> result = StockRules.reserve(wanted, products);
         repository.saveAll(products.values());
         return result;
     }
@@ -42,7 +41,10 @@ public class StockServiceJpa implements StockService {
     }
 
     private Map<Long, ProductEntity> load(Map<Long, Integer> wanted) {
-        return repository.findAllByIdInOrderByIdAsc(wanted.keySet()).stream()
-                .collect(Collectors.toMap(ProductEntity::getId, Function.identity()));
+        Map<Long, ProductEntity> products = new HashMap<>();
+        for (ProductEntity product : repository.findAllById(wanted.keySet())) {
+            products.put(product.getId(), product);
+        }
+        return products;
     }
 }

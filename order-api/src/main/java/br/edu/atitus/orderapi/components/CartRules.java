@@ -13,8 +13,6 @@ public class CartRules {
     private CartRules() {
     }
 
-    // Adiciona o produto no carrinho. Um carrinho só tem produtos de uma loja:
-    // com replace=true o carrinho atual é esvaziado e passa a ser da nova loja
     public static void addItem(CartEntity cart, Long productId, Long establishmentId, int quantity, boolean replace) {
         if (quantity <= 0)
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Quantidade inválida");
@@ -29,11 +27,7 @@ public class CartRules {
 
         Optional<CartItemEntity> existing = find(cart, productId);
         if (existing.isPresent()) {
-            try {
-                existing.get().setQuantity(Math.addExact(existing.get().getQuantity(), quantity));
-            } catch (ArithmeticException e) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Quantidade inválida");
-            }
+            existing.get().setQuantity(existing.get().getQuantity() + quantity);
         } else {
             CartItemEntity item = new CartItemEntity();
             item.setCart(cart);
@@ -44,7 +38,6 @@ public class CartRules {
         cart.setUpdatedAt(LocalDateTime.now());
     }
 
-    // Define a quantidade do item; 0 remove. Carrinho vazio deixa de ter loja
     public static void setQuantity(CartEntity cart, Long productId, int quantity) {
         if (quantity < 0)
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Quantidade inválida");

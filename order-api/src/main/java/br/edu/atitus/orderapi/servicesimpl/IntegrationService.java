@@ -8,7 +8,6 @@ import br.edu.atitus.orderapi.clients.CurrencyClient;
 import br.edu.atitus.orderapi.clients.PaymentClient;
 import br.edu.atitus.orderapi.clients.ProductClient;
 import br.edu.atitus.orderapi.clients.StockClient;
-import br.edu.atitus.orderapi.components.ErrorBodyParser;
 import br.edu.atitus.orderapi.dtos.AddressResponse;
 import br.edu.atitus.orderapi.dtos.PaymentRequest;
 import br.edu.atitus.orderapi.dtos.PaymentResponse;
@@ -17,14 +16,10 @@ import br.edu.atitus.orderapi.dtos.ReservedItemResponse;
 import br.edu.atitus.orderapi.dtos.StockItemRequest;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.server.ResponseStatusException;
 
-// Concentra as chamadas aos outros serviços com circuit breaker.
-// Retry só onde a chamada é segura de repetir: consulta de produto, câmbio e pagamento (idempotente).
-// Reserva e devolução de estoque não têm retry: repetir poderia reservar duas vezes.
 @Service
 public class IntegrationService {
 
@@ -43,7 +38,6 @@ public class IntegrationService {
         this.currencyClient = currencyClient;
     }
 
-    // Vazio quando o produto não existe ou está inativo (404)
     @Retry(name = "product-api")
     @CircuitBreaker(name = "product-api")
     public Optional<ProductResponse> findProduct(Long productId, String targetCurrency) {
@@ -54,13 +48,12 @@ public class IntegrationService {
         }
     }
 
-    // Repassa 404/409 do product-api com a mensagem original
     @CircuitBreaker(name = "stock-api")
     public List<ReservedItemResponse> reserveStock(List<StockItemRequest> items) {
         try {
             return stockClient.reserve(items);
         } catch (HttpClientErrorException e) {
-            throw new ResponseStatusException(e.getStatusCode(), ErrorBodyParser.extractMessage(e.getResponseBodyAsString()));
+            throw new ResponseStatusException(e.getStatusCode(), "Produto indisponível ou sem estoque suficiente");
         }
     }
 
@@ -69,7 +62,6 @@ public class IntegrationService {
         stockClient.release(items);
     }
 
-    // Vazio quando o endereço não existe ou não é do usuário (404)
     @CircuitBreaker(name = "auth-api")
     public Optional<AddressResponse> findAddress(Long addressId, Long userId) {
         try {
@@ -85,7 +77,7 @@ public class IntegrationService {
         try {
             return paymentClient.pay(request);
         } catch (HttpClientErrorException e) {
-            throw new ResponseStatusException(e.getStatusCode(), ErrorBodyParser.extractMessage(e.getResponseBodyAsString()));
+            throw new ResponseStatusException(e.getStatusCode(), "Pagamento recusado");
         }
     }
 

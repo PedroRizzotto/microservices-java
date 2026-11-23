@@ -120,7 +120,7 @@ public class AppointmentServiceJpa implements AppointmentService {
     @Override
     @Transactional
     public AppointmentEntity cancel(Long appointmentId, Long userId) {
-        AppointmentEntity appointment = appointmentRepository.findWithLockById(appointmentId)
+        AppointmentEntity appointment = appointmentRepository.findById(appointmentId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Agendamento não encontrado"));
         EstablishmentEntity establishment = getEstablishment(appointment.getEstablishmentId());
 
@@ -140,7 +140,7 @@ public class AppointmentServiceJpa implements AppointmentService {
         String normalized = method == null ? null : method.trim().toUpperCase();
         if (normalized == null || !METHODS.contains(normalized))
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Método de pagamento inválido");
-        AppointmentEntity appointment = appointmentRepository.findWithLockById(appointmentId)
+        AppointmentEntity appointment = appointmentRepository.findById(appointmentId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Agendamento não encontrado"));
         AppointmentRules.requirePayable(appointment, customerId);
 
@@ -149,9 +149,8 @@ public class AppointmentServiceJpa implements AppointmentService {
             payment = integration.createPayment(new PaymentRequest(
                     "APPOINTMENT", appointment.getId(), customerId, normalized, appointment.getPriceAtBooking()));
         } catch (ResponseStatusException e) {
-            throw e; // 4xx do payment-api segue como veio
+            throw e;
         } catch (RuntimeException e) {
-            // rede, circuit breaker aberto ou 5xx: o agendamento continua sem pagamento
             throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Pagamento indisponível, tente novamente");
         }
 
@@ -165,7 +164,7 @@ public class AppointmentServiceJpa implements AppointmentService {
     public AppointmentEntity complete(Long providerId, Long appointmentId) {
         EstablishmentEntity establishment = establishmentRepository.findByProviderId(providerId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cadastre o estabelecimento primeiro"));
-        AppointmentEntity appointment = appointmentRepository.findWithLockById(appointmentId)
+        AppointmentEntity appointment = appointmentRepository.findById(appointmentId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Agendamento não encontrado"));
         AppointmentRules.requireCompletable(appointment, establishment.getId());
 

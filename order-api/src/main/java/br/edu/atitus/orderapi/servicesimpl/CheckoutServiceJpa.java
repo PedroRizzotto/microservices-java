@@ -51,22 +51,16 @@ public class CheckoutServiceJpa implements CheckoutService {
                 .map(i -> new StockItemRequest(i.getProductId(), i.getQuantity()))
                 .toList();
 
-        // Se a reserva falhar nada ficou reservado; daqui em diante, qualquer falha devolve o estoque
         List<ReservedItemResponse> reserved = integration.reserveStock(requested);
         try {
             OrderEntity order = orderRepository.save(buildOrder(customerId, address, reserved));
             cart.getItems().clear();
             cart.setEstablishmentId(null);
             cart.setUpdatedAt(LocalDateTime.now());
-            // flush dentro do try: deletes/updates do carrinho também ficam cobertos pela devolução do estoque
-            cartRepository.saveAndFlush(cart);
+            cartRepository.save(cart);
             return order;
         } catch (RuntimeException e) {
-            try {
-                integration.releaseStock(requested);
-            } catch (RuntimeException releaseError) {
-                e.addSuppressed(releaseError);
-            }
+            integration.releaseStock(requested);
             throw e;
         }
     }

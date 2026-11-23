@@ -7,7 +7,6 @@ import br.edu.atitus.paymentapi.entities.PaymentReferenceType;
 import br.edu.atitus.paymentapi.entities.PaymentStatus;
 import br.edu.atitus.paymentapi.repositories.PaymentRepository;
 import br.edu.atitus.paymentapi.services.PaymentService;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -49,13 +48,7 @@ public class PaymentServiceJpa implements PaymentService {
         payment.setStatus(PaymentStatus.APPROVED);
         payment.setTransactionCode(UUID.randomUUID().toString());
         payment.setCreatedAt(PaymentRules.now());
-        try {
-            return repository.save(payment);
-        } catch (DataIntegrityViolationException e) {
-            // Requisição concorrente já criou o pagamento desta referência.
-            return repository.findByReferenceTypeAndReferenceId(referenceType, request.referenceId())
-                    .orElseThrow(() -> e);
-        }
+        return repository.save(payment);
     }
 
     @Override

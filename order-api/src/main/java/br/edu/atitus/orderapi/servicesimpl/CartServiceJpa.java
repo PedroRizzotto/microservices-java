@@ -40,7 +40,6 @@ public class CartServiceJpa implements CartService {
     @Override
     @Transactional
     public CartResponse addItem(Long customerId, Long productId, int quantity, boolean replace, String targetCurrency) {
-        // O produto só é consultado para saber a loja; o estoque não é reservado aqui
         ProductResponse product = integration.findProduct(productId, targetCurrency)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Produto não encontrado"));
         if (product.establishmentId() == null)
@@ -89,7 +88,6 @@ public class CartServiceJpa implements CartService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Item não está no carrinho"));
     }
 
-    // Item cujo produto deixou de existir (404) fica indisponível, com preço 0 e fora do total
     private CartResponse toResponse(CartEntity cart, String targetCurrency) {
         List<CartItemResponse> items = new ArrayList<>();
         double total = 0.0;
