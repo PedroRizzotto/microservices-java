@@ -2,6 +2,11 @@
 # Equivalente ao start_consul.bat para macOS/Linux
 set -e
 
+# Credenciais e chave do JWT ficam fora do codigo: exporte antes de rodar o script
+: "${DB_USERNAME:?Defina a variavel DB_USERNAME}"
+: "${DB_PASSWORD:?Defina a variavel DB_PASSWORD}"
+: "${JWT_SECRET:?Defina a variavel JWT_SECRET (minimo 32 caracteres)}"
+
 echo "Iniciando Consul..."
 consul agent -dev > consul.log 2>&1 &
 CONSUL_PID=$!
@@ -28,8 +33,8 @@ consul kv put config/application/management.tracing.export.zipkin.endpoint "http
 
 consul kv put config/product-api/server.port "8000"
 consul kv put config/product-api/spring.datasource.url "jdbc:postgresql://localhost/db_product"
-consul kv put config/product-api/spring.datasource.username "postgres"
-consul kv put config/product-api/spring.datasource.password "postgres"
+consul kv put config/product-api/spring.datasource.username "$DB_USERNAME"
+consul kv put config/product-api/spring.datasource.password "$DB_PASSWORD"
 
 consul kv put config/product-api/app.promotion.message "Customer Week Promotion"
 consul kv put config/product-api,it/app.promotion.message "Promozione Settimana del Cliente"
@@ -59,8 +64,8 @@ consul kv put config/product-api/resilience4j.circuitbreaker.circuit-breaker-asp
 
 consul kv put config/currency-api/server.port "8100"
 consul kv put config/currency-api/spring.datasource.url "jdbc:postgresql://localhost/db_currency"
-consul kv put config/currency-api/spring.datasource.username "postgres"
-consul kv put config/currency-api/spring.datasource.password "postgres"
+consul kv put config/currency-api/spring.datasource.username "$DB_USERNAME"
+consul kv put config/currency-api/spring.datasource.password "$DB_PASSWORD"
 
 # Configuração do Retry - currency-api chamando o Banco Central
 consul kv put config/currency-api/resilience4j.retry.instances.bcb-api.max-attempts "3"
@@ -87,16 +92,18 @@ consul kv put config/currency-api/resilience4j.circuitbreaker.circuit-breaker-as
 consul kv put config/currency-api/app.bcb.data-cotacao "10-15-2026"
 
 # Configuração do Auth API
+consul kv put config/auth-api/app.jwt.secret "$JWT_SECRET"
+consul kv put config/gateway-api/app.jwt.secret "$JWT_SECRET"
 consul kv put config/auth-api/server.port "8200"
 consul kv put config/auth-api/spring.datasource.url "jdbc:postgresql://localhost/db_user"
-consul kv put config/auth-api/spring.datasource.username "postgres"
-consul kv put config/auth-api/spring.datasource.password "postgres"
+consul kv put config/auth-api/spring.datasource.username "$DB_USERNAME"
+consul kv put config/auth-api/spring.datasource.password "$DB_PASSWORD"
 
 # Configuração do Order API
 consul kv put config/order-api/server.port "8300"
 consul kv put config/order-api/spring.datasource.url "jdbc:postgresql://localhost/db_order"
-consul kv put config/order-api/spring.datasource.username "postgres"
-consul kv put config/order-api/spring.datasource.password "postgres"
+consul kv put config/order-api/spring.datasource.username "$DB_USERNAME"
+consul kv put config/order-api/spring.datasource.password "$DB_PASSWORD"
 
 # Resilience4j - chamadas do order-api aos outros serviços (estoque sem retry)
 consul kv put config/order-api/resilience4j.retry.instances.product-api.max-attempts "3"
@@ -155,8 +162,8 @@ consul kv put config/order-api/resilience4j.circuitbreaker.circuit-breaker-aspec
 # Configuração do Agenda API
 consul kv put config/agenda-api/server.port "8400"
 consul kv put config/agenda-api/spring.datasource.url "jdbc:postgresql://localhost/db_agenda"
-consul kv put config/agenda-api/spring.datasource.username "postgres"
-consul kv put config/agenda-api/spring.datasource.password "postgres"
+consul kv put config/agenda-api/spring.datasource.username "$DB_USERNAME"
+consul kv put config/agenda-api/spring.datasource.password "$DB_PASSWORD"
 
 # Resiliência da agenda-api ao chamar o payment-api
 consul kv put config/agenda-api/resilience4j.retry.instances.payment-api.max-attempts "3"
@@ -178,8 +185,8 @@ consul kv put config/agenda-api/resilience4j.circuitbreaker.circuit-breaker-aspe
 # Configuração do Payment API
 consul kv put config/payment-api/server.port "8700"
 consul kv put config/payment-api/spring.datasource.url "jdbc:postgresql://localhost/db_payment"
-consul kv put config/payment-api/spring.datasource.username "postgres"
-consul kv put config/payment-api/spring.datasource.password "postgres"
+consul kv put config/payment-api/spring.datasource.username "$DB_USERNAME"
+consul kv put config/payment-api/spring.datasource.password "$DB_PASSWORD"
 
 echo
 echo "Consul iniciado e configuracoes carregadas! UI: http://localhost:8500"

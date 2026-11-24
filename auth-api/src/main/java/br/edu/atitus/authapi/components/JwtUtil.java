@@ -1,5 +1,6 @@
 package br.edu.atitus.authapi.components;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -11,38 +12,44 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
+@Component
 public class JwtUtil {
 
-    private static final String SECRET_KEY = "chaveSuperSecretaParaJWTdeExemplo!@#123"; // Chave secreta (use uma mais segura)
     private static final long EXPIRATION_TIME = 1000 * 60 * 60 * 24; // 1000 milisegundos * 60 segundos * 60 minutos * 24 horas
 
-    private static SecretKey getSigningKey() {
-        return Keys.hmacShaKeyFor(SECRET_KEY.getBytes());
+    // A chave vem de fora do código (variável de ambiente APP_JWT_SECRET ou Consul)
+    private final SecretKey signingKey;
+
+    public JwtUtil(@Value("${app.jwt.secret}") String secret) {
+        byte[] bytes = secret.getBytes(StandardCharsets.UTF_8);
+        if (bytes.length < 32)
+            throw new IllegalStateException("app.jwt.secret precisa ter pelo menos 32 caracteres");
+        this.signingKey = Keys.hmacShaKeyFor(bytes);
     }
 
-    public static String generateToken(String email, Long id, UserType type) {
+    public String generateToken(String email, Long id, UserType type) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("id", id);
         claims.put("email", email);
         claims.put("type", type.getCode());
         return Jwts.builder()
-                //.subject(email) // Define o "sub" com o email do usuário
                 .claims(claims)
                 .issuedAt(new Date()) // Data de emissão
                 .expiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME)) // Expiração
-                .signWith(getSigningKey()) // Assina com a chave secreta
+                .signWith(signingKey) // Assina com a chave secreta
                 .compact(); // Gera o token JWT
     }
 
-    public static Claims validateToken(String token) {
+    public Claims validateToken(String token) {
         try {
             return Jwts.parser()
-                    .verifyWith(getSigningKey()) // Define a chave para verificação
+                    .verifyWith(signingKey) // Define a chave para verificação
                     .build()
                     .parseSignedClaims(token) // Faz o parsing do token
                     .getPayload(); // Retorna as informações do token
-//                    .getPayload().getSubject(); // Retorna as informações do token
         } catch (Exception e) {
             return null;
         }
@@ -58,4 +65,4 @@ public class JwtUtil {
         return null;
     }
 
-}
+}

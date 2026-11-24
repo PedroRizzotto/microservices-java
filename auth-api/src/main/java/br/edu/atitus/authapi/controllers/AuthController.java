@@ -22,10 +22,12 @@ public class AuthController {
 
     private final UserService userService;
     private final AuthenticationConfiguration authConfig;
+    private final JwtUtil jwtUtil;
 
-    public AuthController(UserService userService, AuthenticationConfiguration authConfig) {
+    public AuthController(UserService userService, AuthenticationConfiguration authConfig, JwtUtil jwtUtil) {
         this.userService = userService;
         this.authConfig = authConfig;
+        this.jwtUtil = jwtUtil;
     }
 
     private UserEntity convertDTO2Entity(SignupRequestDto dto) {
@@ -61,7 +63,7 @@ public class AuthController {
         UserEntity user = (UserEntity) userService.loadUserByUsername(signin.email());
         SigninResponseDto response = new SigninResponseDto(
                 toResponse(user),
-                JwtUtil.generateToken(user.getEmail(), user.getId(), user.getType()));
+                jwtUtil.generateToken(user.getEmail(), user.getId(), user.getType()));
         return ResponseEntity.ok(response);
 
     }

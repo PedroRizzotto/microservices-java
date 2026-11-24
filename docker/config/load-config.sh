@@ -51,11 +51,9 @@ put "config/application/management.tracing.export.zipkin.endpoint" "http://zipki
 
 put "config/product-api/server.port" "8000"
 
-# Banco de dados
+# Banco de dados (usuário e senha vêm do .env pelo docker-compose)
 put "config/product-api/spring.datasource.url" \
     "jdbc:postgresql://product-db:5432/db_product"
-put "config/product-api/spring.datasource.username" "postgres"
-put "config/product-api/spring.datasource.password" "postgres"
 
 # Mensagem de promoção
 put "config/product-api/app.promotion.message" \
@@ -95,11 +93,9 @@ put "config/product-api/resilience4j.circuitbreaker.circuit-breaker-aspect-order
 
 put "config/currency-api/server.port" "8100"
 
-# Banco de dados
+# Banco de dados (usuário e senha vêm do .env pelo docker-compose)
 put "config/currency-api/spring.datasource.url" \
     "jdbc:postgresql://currency-db:5432/db_currency"
-put "config/currency-api/spring.datasource.username" "postgres"
-put "config/currency-api/spring.datasource.password" "postgres"
 
 # Retry - BCB
 put "config/currency-api/resilience4j.retry.instances.bcb-api.max-attempts" "3"
@@ -131,10 +127,8 @@ put "config/currency-api/resilience4j.circuitbreaker.circuit-breaker-aspect-orde
 
 put "config/auth-api/server.port" "8200"
 
-# Banco de dados
+# Banco de dados (usuário e senha vêm do .env pelo docker-compose)
 put "config/auth-api/spring.datasource.url" "jdbc:postgresql://auth-db:5432/db_user"
-put "config/auth-api/spring.datasource.username" "postgres"
-put "config/auth-api/spring.datasource.password" "postgres"
 
 
 # ==========================================================
@@ -143,11 +137,9 @@ put "config/auth-api/spring.datasource.password" "postgres"
 
 put "config/order-api/server.port" "8300"
 
-# Banco de dados
+# Banco de dados (usuário e senha vêm do .env pelo docker-compose)
 put "config/order-api/spring.datasource.url" \
     "jdbc:postgresql://order-db:5432/db_order"
-put "config/order-api/spring.datasource.username" "postgres"
-put "config/order-api/spring.datasource.password" "postgres"
 
 # Resilience4j - chamadas do order-api aos outros serviços (estoque sem retry)
 put "config/order-api/resilience4j.retry.instances.product-api.max-attempts" "3"
@@ -199,11 +191,9 @@ put "config/order-api/resilience4j.circuitbreaker.circuit-breaker-aspect-order" 
 
 put "config/agenda-api/server.port" "8400"
 
-# Banco de dados
+# Banco de dados (usuário e senha vêm do .env pelo docker-compose)
 put "config/agenda-api/spring.datasource.url" \
     "jdbc:postgresql://agenda-db:5432/db_agenda"
-put "config/agenda-api/spring.datasource.username" "postgres"
-put "config/agenda-api/spring.datasource.password" "postgres"
 
 put "config/agenda-api/resilience4j.retry.instances.payment-api.max-attempts" "3"
 put "config/agenda-api/resilience4j.retry.instances.payment-api.wait-duration" "1s"
@@ -224,10 +214,8 @@ put "config/agenda-api/resilience4j.circuitbreaker.circuit-breaker-aspect-order"
 
 put "config/payment-api/server.port" "8700"
 
-# Banco de dados
+# Banco de dados (usuário e senha vêm do .env pelo docker-compose)
 put "config/payment-api/spring.datasource.url"     "jdbc:postgresql://payment-db:5432/db_payment"
-put "config/payment-api/spring.datasource.username" "postgres"
-put "config/payment-api/spring.datasource.password" "postgres"
 
 
 # ==========================================================

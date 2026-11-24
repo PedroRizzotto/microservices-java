@@ -178,21 +178,40 @@ CREATE DATABASE db_agenda;
 CREATE DATABASE db_payment;
 ```
 
-O usuário e a senha do banco estão como postgres/postgres no `start_consul.bat` e no `start_consul.sh`, se for diferente é só alterar lá.
+2. Definir as variáveis de ambiente com o usuário e a senha do PostgreSQL e a chave do JWT (mínimo de 32 caracteres). Nada disso fica no código, os scripts do Consul leem essas variáveis e param se alguma estiver faltando.
 
-2. Rodar o `start_consul.bat` (Windows) ou o `start_consul.sh` (Mac/Linux).
+Windows (PowerShell):
 
-3. Subir os serviços: auth-api, currency-api, product-api, order-api, agenda-api, payment-api e gateway-api (pela IDE ou com `./mvnw spring-boot:run` dentro de cada pasta).
+```
+$env:DB_USERNAME="postgres"
+$env:DB_PASSWORD="sua-senha"
+$env:JWT_SECRET="uma-chave-com-pelo-menos-32-caracteres"
+```
+
+Mac/Linux:
+
+```
+export DB_USERNAME=postgres DB_PASSWORD=sua-senha JWT_SECRET=uma-chave-com-pelo-menos-32-caracteres
+```
+
+3. No mesmo terminal, rodar o `start_consul.bat` (Windows) ou o `start_consul.sh` (Mac/Linux).
+
+4. Subir os serviços: auth-api, currency-api, product-api, order-api, agenda-api, payment-api e gateway-api (pela IDE ou com `./mvnw spring-boot:run` dentro de cada pasta).
 
 ### Com Docker
 
-Dentro da pasta `docker`:
+Dentro da pasta `docker`, copiar o `.env.example` para `.env` e preencher os valores (senha dos bancos, chave do JWT com pelo menos 32 caracteres e senha do Grafana). O `.env` não vai para o git:
 
 ```
+cp .env.example .env
 docker compose up --build -d
 ```
 
-Sobem o Consul, os bancos PostgreSQL, os 7 serviços e a stack de observabilidade. O gateway fica em http://localhost:8080.
+Sobem o Consul, os bancos PostgreSQL, os 7 serviços e a stack de observabilidade. Se faltar alguma variável no `.env`, o compose avisa qual é e não sobe.
+
+As credenciais dos bancos e a chave do JWT chegam aos containers por variável de ambiente (`SPRING_DATASOURCE_USERNAME`, `SPRING_DATASOURCE_PASSWORD` e `APP_JWT_SECRET`). O restante das configurações fica no Consul.
+
+Só o gateway (http://localhost:8080) é publicado para fora. Os microservices não têm porta aberta no host e só são acessados pela rede interna do Docker, então as rotas `/internal/**` e os headers X-User-* não podem ser chamados direto por quem está fora.
 
 ## Observabilidade
 
@@ -202,7 +221,7 @@ Os 7 serviços exportam métricas em `/actuator/prometheus` e enviam traces ao Z
 | --- | --- | --- |
 | Zipkin | http://localhost:9411 | Distributed tracing |
 | Prometheus | http://localhost:9090 | Métricas (coleta a cada 15s) |
-| Grafana | http://localhost:3000 | Dashboards (usuário `admin`, senha `admin`) |
+| Grafana | http://localhost:3000 | Dashboards (usuário e senha definidos no `.env`) |
 | Loki | http://localhost:3100 | Logs centralizados (`/ready`, `/loki/api/v1/labels`) |
 | Grafana Alloy | http://localhost:12345/graph | Coleta os logs dos containers e envia ao Loki |
 

@@ -22,6 +22,12 @@ public class AuthFilter implements GlobalFilter, Ordered {
 
     private static final List<String> USER_HEADERS = List.of("X-User-Id", "X-User-Type", "X-User-Email");
 
+    private final JwtUtil jwtUtil;
+
+    public AuthFilter(JwtUtil jwtUtil) {
+        this.jwtUtil = jwtUtil;
+    }
+
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
 
@@ -51,7 +57,7 @@ public class AuthFilter implements GlobalFilter, Ordered {
 
                 // Extrai o token JWT do cabeçalho de autorização e valida-o.
                 String jwt = authHeader.substring(7);
-                Claims claims = JwtUtil.validateToken(jwt);
+                Claims claims = jwtUtil.validateToken(jwt);
                 if (claims != null) {
 
                     // Extrai os dados do usuário do token JWT.
