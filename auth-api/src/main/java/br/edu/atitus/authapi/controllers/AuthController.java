@@ -1,6 +1,7 @@
 package br.edu.atitus.authapi.controllers;
 
 import br.edu.atitus.authapi.components.JwtUtil;
+import br.edu.atitus.authapi.dtos.MeResponse;
 import br.edu.atitus.authapi.dtos.SigninRequestDto;
 import br.edu.atitus.authapi.dtos.SigninResponseDto;
 import br.edu.atitus.authapi.dtos.SignupRequestDto;
@@ -33,20 +34,24 @@ public class AuthController {
         return user;
     }
 
+    private MeResponse toResponse(UserEntity user) {
+        return new MeResponse(user.getId(), user.getName(), user.getEmail(), user.getType().getCode());
+    }
+
     @PostMapping("/signup")
-    public ResponseEntity<UserEntity> signup(@RequestBody SignupRequestDto dto) throws Exception {
+    public ResponseEntity<MeResponse> signup(@RequestBody SignupRequestDto dto) throws Exception {
         var user = convertDTO2Entity(dto);
         user.setType(UserType.Common);
         userService.save(user);
-        return ResponseEntity.status(HttpStatus.CREATED).body(user);
+        return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(user));
     }
 
     @PostMapping("/signup/provider")
-    public ResponseEntity<UserEntity> signupProvider(@RequestBody SignupRequestDto dto) throws Exception {
+    public ResponseEntity<MeResponse> signupProvider(@RequestBody SignupRequestDto dto) throws Exception {
         var user = convertDTO2Entity(dto);
         user.setType(UserType.Provider);
         userService.save(user);
-        return ResponseEntity.status(HttpStatus.CREATED).body(user);
+        return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(user));
     }
 
     @PostMapping("/signin")
@@ -54,7 +59,9 @@ public class AuthController {
         authConfig.getAuthenticationManager()
                 .authenticate(new UsernamePasswordAuthenticationToken(signin.email(), signin.password()));
         UserEntity user = (UserEntity) userService.loadUserByUsername(signin.email());
-        SigninResponseDto response = new SigninResponseDto(user, JwtUtil.generateToken(user.getEmail(), user.getId(), user.getType()));
+        SigninResponseDto response = new SigninResponseDto(
+                toResponse(user),
+                JwtUtil.generateToken(user.getEmail(), user.getId(), user.getType()));
         return ResponseEntity.ok(response);
 
     }

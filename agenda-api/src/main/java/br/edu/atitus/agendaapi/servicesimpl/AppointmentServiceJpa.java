@@ -9,12 +9,14 @@ import br.edu.atitus.agendaapi.entities.AppointmentEntity;
 import br.edu.atitus.agendaapi.entities.AppointmentStatus;
 import br.edu.atitus.agendaapi.entities.AvailabilityEntity;
 import br.edu.atitus.agendaapi.entities.EstablishmentEntity;
+import br.edu.atitus.agendaapi.entities.PetEntity;
 import br.edu.atitus.agendaapi.entities.PetServiceEntity;
 import br.edu.atitus.agendaapi.repositories.AppointmentRepository;
 import br.edu.atitus.agendaapi.repositories.AvailabilityRepository;
 import br.edu.atitus.agendaapi.repositories.EstablishmentRepository;
 import br.edu.atitus.agendaapi.repositories.PetServiceRepository;
 import br.edu.atitus.agendaapi.services.AppointmentService;
+import br.edu.atitus.agendaapi.services.CustomerPetService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -40,17 +42,20 @@ public class AppointmentServiceJpa implements AppointmentService {
     private final PetServiceRepository petServiceRepository;
     private final AvailabilityRepository availabilityRepository;
     private final IntegrationService integration;
+    private final CustomerPetService customerPetService;
 
     public AppointmentServiceJpa(AppointmentRepository appointmentRepository,
                                  EstablishmentRepository establishmentRepository,
                                  PetServiceRepository petServiceRepository,
                                  AvailabilityRepository availabilityRepository,
-                                 IntegrationService integration) {
+                                 IntegrationService integration,
+                                 CustomerPetService customerPetService) {
         this.appointmentRepository = appointmentRepository;
         this.establishmentRepository = establishmentRepository;
         this.petServiceRepository = petServiceRepository;
         this.availabilityRepository = availabilityRepository;
         this.integration = integration;
+        this.customerPetService = customerPetService;
     }
 
     private EstablishmentEntity getEstablishment(Long establishmentId) {
@@ -77,8 +82,7 @@ public class AppointmentServiceJpa implements AppointmentService {
         EstablishmentEntity establishment = getEstablishment(request.establishmentId());
         PetServiceEntity petService = getActiveService(request.serviceId(), establishment.getId());
 
-        if (request.petName() == null || request.petName().isBlank())
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Nome do pet informado inválido");
+        PetEntity pet = customerPetService.getMine(customerId, request.petId());
         if (request.startAt() == null || request.startAt().isBefore(AgendaRules.now()))
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Data e hora informadas inválidas");
 
@@ -97,12 +101,26 @@ public class AppointmentServiceJpa implements AppointmentService {
         appointment.setPetService(petService);
         appointment.setCustomerId(customerId);
         appointment.setCustomerEmail(customerEmail);
-        appointment.setPetName(request.petName());
+        appointment.setPetId(pet.getId());
+        appointment.setPetName(pet.getName());
+        appointment.setPetSpecies(pet.getSpecies());
         appointment.setStartAt(startAt);
         appointment.setEndAt(endAt);
         appointment.setPriceAtBooking(petService.getPrice());
         appointment.setStatus(AppointmentStatus.AGENDADO);
         return appointmentRepository.save(appointment);
+    }
+
+    @Override
+    public AppointmentEntity getOne(Long appointmentId, Long userId) {
+        AppointmentEntity appointment = appointmentRepository.findById(appointmentId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Agendamento não encontrado"));
+        EstablishmentEntity establishment = getEstablishment(appointment.getEstablishmentId());
+
+        // Só o cliente que agendou ou o prestador do pet shop enxergam o agendamento
+        if (!appointment.getCustomerId().equals(userId) && !establishment.getProviderId().equals(userId))
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Agendamento não encontrado");
+        return appointment;
     }
 
     @Override

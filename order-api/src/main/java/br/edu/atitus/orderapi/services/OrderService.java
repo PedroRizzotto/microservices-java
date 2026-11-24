@@ -14,6 +14,8 @@ public interface OrderService {
 
     OrderEntity cancel(Long customerId, Long id);
 
+    OrderEntity getReceived(Long providerId, Long id, String targetCurrency);
+
     Page<OrderEntity> listReceived(Long providerId, OrderStatus status, Pageable pageable);
 
     OrderEntity updateStatus(Long providerId, Long id, OrderStatus to);

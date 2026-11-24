@@ -95,6 +95,15 @@ public class OrderServiceJpa implements OrderService {
 
     @Override
     @Transactional(readOnly = true)
+    public OrderEntity getReceived(Long providerId, Long id, String targetCurrency) {
+        OrderEntity order = orderRepository.findByIdAndProviderId(id, providerId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Pedido não encontrado"));
+        applyConversion(List.of(order), targetCurrency);
+        return order;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Page<OrderEntity> listReceived(Long providerId, OrderStatus status, Pageable pageable) {
         return status == null
                 ? orderRepository.findByProviderId(providerId, pageable)

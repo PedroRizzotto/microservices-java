@@ -31,6 +31,11 @@ public class AgendaController {
         return ResponseEntity.ok(establishmentService.findAll(pageable));
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<EstablishmentEntity> getById(@PathVariable Long id) {
+        return ResponseEntity.ok(establishmentService.getById(id));
+    }
+
     @GetMapping("/{id}/services")
     public ResponseEntity<List<PetServiceEntity>> getServices(@PathVariable Long id) {
         return ResponseEntity.ok(establishmentService.listActiveServices(id));

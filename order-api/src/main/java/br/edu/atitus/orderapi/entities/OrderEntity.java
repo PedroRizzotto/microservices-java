@@ -33,6 +33,8 @@ public class OrderEntity {
     @JsonIgnore
     private Long customerId; // ID do cliente logado
 
+    private String customerEmail;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private OrderStatus status;
@@ -100,6 +102,14 @@ public class OrderEntity {
 
     public void setCustomerId(Long customerId) {
         this.customerId = customerId;
+    }
+
+    public String getCustomerEmail() {
+        return customerEmail;
+    }
+
+    public void setCustomerEmail(String customerEmail) {
+        this.customerEmail = customerEmail;
     }
 
     public OrderStatus getStatus() {

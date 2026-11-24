@@ -31,6 +31,11 @@ public class AppointmentEntity {
     @Column(nullable = false)
     private String petName;
 
+    private Long petId;
+
+    @Enumerated(EnumType.STRING)
+    private PetSpecies petSpecies;
+
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     @Column(nullable = false)
     private LocalDateTime startAt;
@@ -100,6 +105,22 @@ public class AppointmentEntity {
 
     public void setPetName(String petName) {
         this.petName = petName;
+    }
+
+    public Long getPetId() {
+        return petId;
+    }
+
+    public void setPetId(Long petId) {
+        this.petId = petId;
+    }
+
+    public PetSpecies getPetSpecies() {
+        return petSpecies;
+    }
+
+    public void setPetSpecies(PetSpecies petSpecies) {
+        this.petSpecies = petSpecies;
     }
 
     public LocalDateTime getStartAt() {

@@ -25,10 +25,11 @@ public class CheckoutController {
     public ResponseEntity<OrderEntity> checkout(
             @RequestBody CheckoutRequest request,
             @RequestHeader("X-User-Id") Long userId,
+            @RequestHeader("X-User-Email") String userEmail,
             @RequestHeader("X-User-Type") Integer userType) {
         authorization.requireCustomer(userType);
         if (request.addressId() == null)
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Endereço obrigatório");
-        return ResponseEntity.status(HttpStatus.CREATED).body(checkoutService.checkout(userId, request.addressId()));
+        return ResponseEntity.status(HttpStatus.CREATED).body(checkoutService.checkout(userId, userEmail, request.addressId()));
     }
 }

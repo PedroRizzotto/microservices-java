@@ -30,6 +30,7 @@ public class WsAppointmentController {
             @RequestHeader("X-User-Id") Long userId,
             @RequestHeader("X-User-Email") String userEmail,
             @RequestHeader("X-User-Type") Integer userType) {
+        authService.requireCustomer(userType);
         return ResponseEntity.status(201).body(service.book(userId, userEmail, dto));
     }
 
@@ -39,7 +40,16 @@ public class WsAppointmentController {
             @RequestHeader("X-User-Id") Long userId,
             @RequestHeader("X-User-Email") String userEmail,
             @RequestHeader("X-User-Type") Integer userType) {
+        authService.requireCustomer(userType);
         return ResponseEntity.ok(service.findMine(userId, pageable));
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<AppointmentEntity> getOne(
+            @PathVariable Long id,
+            @RequestHeader("X-User-Id") Long userId,
+            @RequestHeader("X-User-Type") Integer userType) {
+        return ResponseEntity.ok(service.getOne(id, userId));
     }
 
     @GetMapping("/received")

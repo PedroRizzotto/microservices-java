@@ -22,6 +22,8 @@ public interface EstablishmentService {
 
     PetServiceEntity addService(Long providerId, PetServiceRequest request);
 
+    PetServiceEntity updateService(Long providerId, Long serviceId, PetServiceRequest request);
+
     void deactivateService(Long providerId, Long serviceId);
 
     List<PetServiceEntity> listActiveServices(Long establishmentId);

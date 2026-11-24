@@ -1,5 +1,6 @@
 package br.edu.atitus.productapi.servicesimpl;
 
+import java.util.List;
 import br.edu.atitus.productapi.clients.AgendaClient;
 import br.edu.atitus.productapi.components.ProductRules;
 import br.edu.atitus.productapi.dtos.ProductRequest;
@@ -147,6 +148,11 @@ public class ProductServiceJpa implements ProductService {
 
         product.setActive(false);
         repository.save(product);
+    }
+
+    @Override
+    public List<String> listCategories() {
+        return repository.findActiveCategories();
     }
 
     @Override

@@ -54,6 +54,17 @@ public class WsProviderController {
         return ResponseEntity.status(201).body(service.addService(userId, dto));
     }
 
+    @PutMapping("/services/{id}")
+    public ResponseEntity<PetServiceEntity> putService(
+            @PathVariable Long id,
+            @RequestBody PetServiceRequest dto,
+            @RequestHeader("X-User-Id") Long userId,
+            @RequestHeader("X-User-Email") String userEmail,
+            @RequestHeader("X-User-Type") Integer userType) {
+        authService.requireProvider(userType);
+        return ResponseEntity.ok(service.updateService(userId, id, dto));
+    }
+
     @DeleteMapping("/services/{id}")
     public ResponseEntity<Void> deleteService(
             @PathVariable Long id,

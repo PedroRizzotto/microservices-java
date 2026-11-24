@@ -1,5 +1,6 @@
 package br.edu.atitus.productapi.services;
 
+import java.util.List;
 import br.edu.atitus.productapi.dtos.ProductRequest;
 import br.edu.atitus.productapi.dtos.ProductResponse;
 import br.edu.atitus.productapi.entities.ProductEntity;
@@ -13,4 +14,5 @@ public interface ProductService {
     ProductEntity update(Long providerId, Long id, ProductRequest r);
     void deactivate(Long providerId, Long id);
     Page<ProductEntity> findMine(Long providerId, Pageable pageable);
+    List<String> listCategories();
 }

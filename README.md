@@ -18,7 +18,7 @@ O Consul (porta 8500) é usado para o registro dos serviços e para as configura
 
 ## Tipos de usuário
 
-- 1 = Cliente: carrinho, checkout, pagamento e cancelamento de pedido, endereços e agendamentos.
+- 1 = Cliente: carrinho, checkout, pagamento e cancelamento de pedido, endereços, pets e agendamentos.
 - 2 = Prestador: dono de um pet shop. Cadastra produtos, serviços e horários, acompanha e envia os pedidos da loja e conclui agendamentos.
 
 Cada rota exige o tipo certo, senão retorna 403. Não existe usuário administrador. Na primeira execução do auth-api é criado o prestador `provider@provider.dev` com a senha `teste`. Outros prestadores se cadastram em `/auth/signup/provider` e clientes em `/auth/signup`.
@@ -49,11 +49,13 @@ Códigos usados: 400 (dados inválidos), 401 (sem token ou token inválido), 403
 | --- | --- |
 | POST /auth/signup | Cadastra cliente. Corpo: name, email, password. Retorna 201 |
 | POST /auth/signup/provider | Cadastra prestador. Mesmo corpo. Retorna 201 |
-| POST /auth/signin | Corpo: email, password. Retorna `{ "user": {...}, "token": "..." }` |
+| POST /auth/signin | Corpo: email, password. Retorna `{ "user": { id, name, email, type }, "token": "..." }`, com type 1 (cliente) ou 2 (prestador) |
 | GET /products?targetCurrency=BRL | Busca de produtos ativos, ordenados por nome, 10 por página. Filtros opcionais: establishmentId, search (nome) e category |
 | GET /products/{id}?targetCurrency=BRL | Produto com o preço convertido |
+| GET /products/categories | Categorias dos produtos ativos, para o filtro da busca |
 | GET /currencies?source=USD&target=BRL | Cotação entre duas moedas |
 | GET /agenda/establishments | Pet shops, paginado |
+| GET /agenda/establishments/{id} | Dados de um pet shop |
 | GET /agenda/establishments/{id}/services | Serviços do pet shop |
 | GET /agenda/establishments/{id}/slots?serviceId=1&date=2026-11-16 | Horários livres do dia para o serviço |
 
@@ -64,6 +66,8 @@ Auth (auth-api):
 | Método e rota | Quem | Descrição |
 | --- | --- | --- |
 | GET /ws/auth/me | qualquer | Dados do usuário do token |
+| PUT /ws/auth/me | qualquer | Altera o nome. Corpo: name |
+| PUT /ws/auth/me/password | qualquer | Troca a senha. Corpo: currentPassword, newPassword. Senha atual errada: 400 |
 | GET /ws/auth/addresses | qualquer | Lista os endereços |
 | POST /ws/auth/addresses | qualquer | Cria endereço. Corpo: label, zipCode, street, number, complement, district, city, state |
 | PUT /ws/auth/addresses/{id} | qualquer | Altera o endereço |
@@ -93,6 +97,7 @@ Carrinho e pedidos (order-api):
 | POST /ws/orders/{id}/pay | cliente | Paga o pedido. Corpo: method |
 | PATCH /ws/orders/{id}/cancel | cliente | Cancela pedido aguardando pagamento |
 | GET /ws/orders/received?status=PAID | prestador | Pedidos da loja dele, paginado, filtro opcional por status |
+| GET /ws/orders/received/{id} | prestador | Detalhe de um pedido da loja, com o e-mail do cliente |
 | PATCH /ws/orders/{id}/status | prestador | Avança o pedido. Corpo: status (SHIPPED ou DELIVERED) |
 
 Agenda (agenda-api):
@@ -102,13 +107,20 @@ Agenda (agenda-api):
 | PUT /ws/agenda/establishment | prestador | Cria ou altera o pet shop. Corpo: name, address, phone |
 | GET /ws/agenda/establishment | prestador | Pet shop do prestador |
 | POST /ws/agenda/services | prestador | Cadastra serviço. Corpo: name, durationMinutes, price |
+| PUT /ws/agenda/services/{id} | prestador | Altera o serviço (agendamentos já feitos mantêm o preço da reserva) |
 | DELETE /ws/agenda/services/{id} | prestador | Remove o serviço |
 | PUT /ws/agenda/availability | prestador | Substitui a grade de atendimento. Corpo: lista de dayOfWeek, startTime, endTime |
 | GET /ws/agenda/availability | prestador | Grade de atendimento |
 | GET /ws/agenda/appointments/received | prestador | Agendamentos do pet shop, paginado |
 | PATCH /ws/agenda/appointments/{id}/complete | prestador | Conclui o agendamento |
-| POST /ws/agenda/appointments | cliente | Agenda um horário. Corpo: establishmentId, serviceId, startAt, petName |
+| GET /ws/agenda/pets | cliente | Pets do cliente |
+| GET /ws/agenda/pets/{id} | cliente | Detalhe do pet |
+| POST /ws/agenda/pets | cliente | Cadastra pet. Corpo: name, species, breed, birthDate, weight, notes. Obrigatórios: name e species |
+| PUT /ws/agenda/pets/{id} | cliente | Altera o pet |
+| DELETE /ws/agenda/pets/{id} | cliente | Remove o pet (os agendamentos antigos continuam com os dados dele) |
+| POST /ws/agenda/appointments | cliente | Agenda um horário. Corpo: establishmentId, serviceId, startAt, petId |
 | GET /ws/agenda/appointments | cliente | Agendamentos do cliente, paginado |
+| GET /ws/agenda/appointments/{id} | cliente ou prestador do pet shop | Detalhe do agendamento |
 | PATCH /ws/agenda/appointments/{id}/cancel | cliente ou prestador do pet shop | Cancela o agendamento |
 | POST /ws/agenda/appointments/{id}/pay | cliente | Paga o agendamento. Corpo: method |
 
@@ -142,11 +154,12 @@ Status do pedido: `PENDING_PAYMENT`, `PAID`, `SHIPPED`, `DELIVERED`, `CANCELED`.
 ## Fluxo de agendamento
 
 1. O prestador cadastra o pet shop, um serviço (`POST /ws/agenda/services`) e a grade de atendimento (`PUT /ws/agenda/availability`). O dayOfWeek vai de 1 (segunda) a 7 (domingo).
-2. O cliente consulta os horários livres em `GET /agenda/establishments/{id}/slots?serviceId=1&date=2026-11-16`.
-3. `POST /ws/agenda/appointments` cria o agendamento com status `AGENDADO`. Horário já ocupado: 409. Fora do horário de atendimento: 400.
-4. `POST /ws/agenda/appointments/{id}/pay` com `{ "method": "PIX" }` registra o pagamento no payment-api. Agendamento cancelado ou já pago: 409.
-5. O prestador conclui com `PATCH /ws/agenda/appointments/{id}/complete` (status `CONCLUIDO`). Agendamento que não está `AGENDADO`: 409.
-6. O cancelamento (`CANCELADO`) pode ser feito pelo cliente ou pelo prestador do pet shop. Agendamento já concluído não pode ser cancelado (409).
+2. O cliente cadastra o pet (`POST /ws/agenda/pets`). Espécies: CACHORRO, GATO, PASSARO, ROEDOR, PEIXE, REPTIL e OUTRO (aceita minúscula e acento).
+3. O cliente consulta os horários livres em `GET /agenda/establishments/{id}/slots?serviceId=1&date=2026-11-16`.
+4. `POST /ws/agenda/appointments` com o petId cria o agendamento com status `AGENDADO` e copia o nome e a espécie do pet. Pet de outro cliente: 404. Horário já ocupado: 409. Fora do horário de atendimento: 400.
+5. `POST /ws/agenda/appointments/{id}/pay` com `{ "method": "PIX" }` registra o pagamento no payment-api. Agendamento cancelado ou já pago: 409.
+6. O prestador conclui com `PATCH /ws/agenda/appointments/{id}/complete` (status `CONCLUIDO`). Agendamento que não está `AGENDADO`: 409.
+7. O cancelamento (`CANCELADO`) pode ser feito pelo cliente ou pelo prestador do pet shop. Agendamento já concluído não pode ser cancelado (409).
 
 ## Como rodar
 
@@ -201,7 +214,7 @@ Rodando sem Docker, o `start_consul.bat`/`start_consul.sh` apontam o tracing par
 
 Em cada módulo: `./mvnw test`.
 
-Para testar a API na mão, importe no Postman a coleção `docs/postman/petshop.postman_collection.json`. Ela usa o gateway (variável `baseUrl`, padrão http://localhost:8080), cadastra um cliente e um prestador novos a cada execução e, rodando as requisições de cima para baixo, percorre o fluxo completo: pet shop, serviço, horários, produto, endereço, carrinho, checkout, pagamento, envio e entrega do pedido, e agendamento, pagamento e conclusão. Os tokens e os ids são guardados nas variáveis da coleção pelos scripts de teste.
+Para testar a API na mão, importe no Postman a coleção `docs/postman/petshop.postman_collection.json`. Ela usa o gateway (variável `baseUrl`, padrão http://localhost:8080), cadastra um cliente e um prestador novos a cada execução e, rodando as requisições de cima para baixo, percorre o fluxo completo: perfil e senha, pet shop, serviço, horários, produto, endereço, pets, carrinho, checkout, pagamento, envio e entrega do pedido, e agendamento, pagamento e conclusão. Os tokens e os ids são guardados nas variáveis da coleção pelos scripts de teste.
 
 Resumo do que esperar:
 

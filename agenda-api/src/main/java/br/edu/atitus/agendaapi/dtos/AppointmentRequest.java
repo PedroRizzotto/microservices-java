@@ -6,6 +6,6 @@ public record AppointmentRequest(
         Long establishmentId,
         Long serviceId,
         LocalDateTime startAt,
-        String petName
+        Long petId
 ) {
 }

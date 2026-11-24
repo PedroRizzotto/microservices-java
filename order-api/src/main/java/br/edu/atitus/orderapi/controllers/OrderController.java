@@ -47,6 +47,16 @@ public class OrderController {
         return ResponseEntity.ok(orderService.listReceived(userId, parseStatus(status, false), pageable));
     }
 
+    @GetMapping("/received/{id}")
+    public ResponseEntity<OrderEntity> getReceived(
+            @PathVariable Long id,
+            @RequestParam(defaultValue = "BRL") String targetCurrency,
+            @RequestHeader("X-User-Id") Long userId,
+            @RequestHeader("X-User-Type") Integer userType) {
+        authorization.requireProvider(userType);
+        return ResponseEntity.ok(orderService.getReceived(userId, id, targetCurrency.toUpperCase()));
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<OrderEntity> getMine(
             @PathVariable Long id,

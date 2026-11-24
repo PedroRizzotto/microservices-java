@@ -69,13 +69,7 @@ public class EstablishmentServiceJpa implements EstablishmentService {
     @Override
     public PetServiceEntity addService(Long providerId, PetServiceRequest request) {
         EstablishmentEntity establishment = findMine(providerId);
-
-        if (request.name() == null || request.name().isBlank())
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Nome informado inválido");
-        if (request.durationMinutes() == null || request.durationMinutes() <= 0)
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Duração informada inválida");
-        if (request.price() == null || request.price() < 0)
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Preço informado inválido");
+        validateService(request);
 
         PetServiceEntity petService = new PetServiceEntity();
         petService.setEstablishmentId(establishment.getId());
@@ -84,6 +78,38 @@ public class EstablishmentServiceJpa implements EstablishmentService {
         petService.setPrice(request.price());
         petService.setActive(true);
         return petServiceRepository.save(petService);
+    }
+
+    @Override
+    public PetServiceEntity updateService(Long providerId, Long serviceId, PetServiceRequest request) {
+        PetServiceEntity petService = getOwnService(providerId, serviceId);
+        validateService(request);
+
+        // Agendamentos já feitos guardam o preço do momento da reserva (priceAtBooking)
+        petService.setName(request.name());
+        petService.setDurationMinutes(request.durationMinutes());
+        petService.setPrice(request.price());
+        return petServiceRepository.save(petService);
+    }
+
+    private void validateService(PetServiceRequest request) {
+        if (request == null || request.name() == null || request.name().isBlank())
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Nome informado inválido");
+        if (request.durationMinutes() == null || request.durationMinutes() <= 0)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Duração informada inválida");
+        if (request.price() == null || request.price() < 0)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Preço informado inválido");
+    }
+
+    private PetServiceEntity getOwnService(Long providerId, Long serviceId) {
+        PetServiceEntity petService = petServiceRepository.findById(serviceId)
+                .filter(PetServiceEntity::isActive)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Serviço não encontrado"));
+        EstablishmentEntity establishment = establishmentRepository.findByProviderId(providerId).orElse(null);
+
+        if (establishment == null || !establishment.getId().equals(petService.getEstablishmentId()))
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Serviço não encontrado");
+        return petService;
     }
 
     @Override

@@ -54,6 +54,31 @@ public class UserServiceJpa implements UserService {
     }
 
     @Override
+    public UserEntity updateName(Long userId, String name) {
+        if (name == null || name.isBlank())
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Nome informado inválido");
+        UserEntity user = findUser(userId);
+        user.setName(name.trim());
+        return userRepository.save(user);
+    }
+
+    @Override
+    public void changePassword(Long userId, String currentPassword, String newPassword) {
+        if (newPassword == null || newPassword.isBlank())
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Nova senha informada inválida");
+        UserEntity user = findUser(userId);
+        if (currentPassword == null || !encoder.matches(currentPassword, user.getPassword()))
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Senha atual incorreta");
+        user.setPassword(encoder.encode(newPassword));
+        userRepository.save(user);
+    }
+
+    private UserEntity findUser(Long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado"));
+    }
+
+    @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         var user = userRepository.findByEmail(username)
                 .orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado com este e-mail"));

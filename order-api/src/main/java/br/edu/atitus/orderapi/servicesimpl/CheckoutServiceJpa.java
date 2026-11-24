@@ -39,7 +39,7 @@ public class CheckoutServiceJpa implements CheckoutService {
 
     @Override
     @Transactional
-    public OrderEntity checkout(Long customerId, Long addressId) {
+    public OrderEntity checkout(Long customerId, String customerEmail, Long addressId) {
         CartEntity cart = cartRepository.findByCustomerId(customerId)
                 .filter(c -> !c.getItems().isEmpty())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Carrinho vazio"));
@@ -53,7 +53,7 @@ public class CheckoutServiceJpa implements CheckoutService {
 
         List<ReservedItemResponse> reserved = integration.reserveStock(requested);
         try {
-            OrderEntity order = orderRepository.save(buildOrder(customerId, address, reserved));
+            OrderEntity order = orderRepository.save(buildOrder(customerId, customerEmail, address, reserved));
             cart.getItems().clear();
             cart.setEstablishmentId(null);
             cart.setUpdatedAt(LocalDateTime.now());
@@ -65,9 +65,10 @@ public class CheckoutServiceJpa implements CheckoutService {
         }
     }
 
-    private OrderEntity buildOrder(Long customerId, AddressResponse address, List<ReservedItemResponse> reserved) {
+    private OrderEntity buildOrder(Long customerId, String customerEmail, AddressResponse address, List<ReservedItemResponse> reserved) {
         OrderEntity order = new OrderEntity();
         order.setCustomerId(customerId);
+        order.setCustomerEmail(customerEmail);
         order.setStatus(OrderStatus.PENDING_PAYMENT);
         order.setOrderDate(LocalDateTime.now());
         order.setEstablishmentId(reserved.get(0).establishmentId());
@@ -90,11 +91,14 @@ public class CheckoutServiceJpa implements CheckoutService {
             item.setQuantity(r.quantity());
             item.setPriceAtPurchase(converter.toBrl(r.price(), r.currency()));
             item.setCurrencyAtPurchase(BRL);
+            // O pedido nasce em BRL, então o valor exibido é o próprio preço
+            item.setConvertedPrice(item.getPriceAtPurchase());
             total += item.getPriceAtPurchase() * r.quantity();
             items.add(item);
         }
         order.setItems(items);
         order.setTotalAmount(total);
+        order.setTotalConvertedPrice(total);
         return order;
     }
 }

@@ -11,6 +11,8 @@ import java.util.List;
 public interface AppointmentService {
     AppointmentEntity book(Long customerId, String customerEmail, AppointmentRequest request);
 
+    AppointmentEntity getOne(Long appointmentId, Long userId);
+
     Page<AppointmentEntity> findMine(Long customerId, Pageable pageable);
 
     Page<AppointmentEntity> findReceived(Long providerId, Pageable pageable);

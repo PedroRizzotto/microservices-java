@@ -1,5 +1,6 @@
 package br.edu.atitus.productapi.controllers;
 
+import java.util.List;
 import br.edu.atitus.productapi.dtos.ProductResponse;
 import br.edu.atitus.productapi.services.ProductService;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -16,6 +17,11 @@ public class ProductController {
 
     public ProductController(@Qualifier("productServiceJpa") ProductService service) {
         this.service = service;
+    }
+
+    @GetMapping("/categories")
+    public ResponseEntity<List<String>> getCategories() {
+        return ResponseEntity.ok(service.listCategories());
     }
 
     @GetMapping("/{id}")

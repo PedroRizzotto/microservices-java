@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "Petshop - fluxo completo",
-    "description": "Rode a colecao de cima para baixo: cadastra cliente e prestador novos, monta o pet shop, compra um produto, agenda um servico e conclui. Todas as requisicoes passam pelo gateway.",
+    "description": "Rode a colecao de cima para baixo: cadastra cliente e prestador novos, monta o pet shop, cadastra o pet do cliente, compra um produto, agenda um servico para o pet e conclui. Todas as requisicoes passam pelo gateway.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
@@ -147,6 +147,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('status 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('usuario e cliente (type 1)', function () { pm.expect(pm.response.json().user.type).to.eql(1); });",
                   "pm.collectionVariables.set('tokenCliente', pm.response.json().token);"
                 ]
               }
@@ -268,6 +269,150 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('status 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Alterar meu nome",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenCliente}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ws/auth/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ws",
+                "auth",
+                "me"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Cliente Atualizado\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('nome alterado', function () { pm.expect(pm.response.json().name).to.eql('Cliente Atualizado'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Trocar senha com a senha atual errada (400)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenCliente}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ws/auth/me/password",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ws",
+                "auth",
+                "me",
+                "password"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"currentPassword\": \"errada\",\n  \"newPassword\": \"Teste456\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 400', function () { pm.response.to.have.status(400); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Trocar senha",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenCliente}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ws/auth/me/password",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ws",
+                "auth",
+                "me",
+                "password"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"currentPassword\": \"Teste123\",\n  \"newPassword\": \"Teste456\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 204', function () { pm.response.to.have.status(204); });"
                 ]
               }
             }
@@ -440,6 +585,354 @@
       ]
     },
     {
+      "name": "Pets",
+      "item": [
+        {
+          "name": "Cadastrar pet",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenCliente}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ws/agenda/pets",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ws",
+                "agenda",
+                "pets"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Mingau\",\n  \"species\": \"GATO\",\n  \"breed\": \"Siamês\",\n  \"birthDate\": \"2021-03-10\",\n  \"weight\": 4.2,\n  \"notes\": \"Não gosta de secador\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 201', function () { pm.response.to.have.status(201); });",
+                  "pm.collectionVariables.set('petId', pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar meus pets",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenCliente}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ws/agenda/pets",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ws",
+                "agenda",
+                "pets"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('lista o pet cadastrado', function () { pm.expect(pm.response.json().length).to.be.above(0); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Detalhe do pet",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenCliente}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ws/agenda/pets/{{petId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ws",
+                "agenda",
+                "pets",
+                "{{petId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Alterar pet",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenCliente}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ws/agenda/pets/{{petId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ws",
+                "agenda",
+                "pets",
+                "{{petId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Mingau\",\n  \"species\": \"GATO\",\n  \"breed\": \"Siamês\",\n  \"birthDate\": \"2021-03-10\",\n  \"weight\": 4.8,\n  \"notes\": \"Não gosta de secador\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Cadastrar outro pet",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenCliente}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ws/agenda/pets",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ws",
+                "agenda",
+                "pets"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Rex\",\n  \"species\": \"cachorro\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 201', function () { pm.response.to.have.status(201); });",
+                  "pm.collectionVariables.set('petExtraId', pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Remover pet",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenCliente}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ws/agenda/pets/{{petExtraId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ws",
+                "agenda",
+                "pets",
+                "{{petExtraId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 204', function () { pm.response.to.have.status(204); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Especie invalida (400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenCliente}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ws/agenda/pets",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ws",
+                "agenda",
+                "pets"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Nemo\",\n  \"species\": \"DRAGAO\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 400', function () { pm.response.to.have.status(400); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Prestador cadastrando pet (403)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenPrestador}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ws/agenda/pets",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ws",
+                "agenda",
+                "pets"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Nemo\",\n  \"species\": \"PEIXE\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 403', function () { pm.response.to.have.status(403); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
       "name": "Pet shop",
       "item": [
         {
@@ -573,6 +1066,54 @@
           ]
         },
         {
+          "name": "Alterar servico",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenPrestador}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ws/agenda/services/{{serviceId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ws",
+                "agenda",
+                "services",
+                "{{serviceId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Banho e tosa\",\n  \"durationMinutes\": 60,\n  \"price\": 70.0\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
           "name": "Definir horarios de atendimento",
           "request": {
             "method": "PUT",
@@ -666,6 +1207,35 @@
               "path": [
                 "agenda",
                 "establishments"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Detalhe do pet shop (publico)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/agenda/establishments/{{establishmentId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "agenda",
+                "establishments",
+                "{{establishmentId}}"
               ]
             }
           },
@@ -908,6 +1478,34 @@
                   "key": "establishmentId",
                   "value": "{{establishmentId}}"
                 }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Categorias (publico)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/products/categories",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "products",
+                "categories"
               ]
             }
           },
@@ -1398,6 +1996,42 @@
           ]
         },
         {
+          "name": "Detalhe do pedido recebido (prestador)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenPrestador}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ws/orders/received/{{orderId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ws",
+                "orders",
+                "received",
+                "{{orderId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('mostra o e-mail do cliente', function () { pm.expect(pm.response.json().customerEmail).to.eql(pm.collectionVariables.get('emailCliente')); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
           "name": "Marcar como enviado (SHIPPED)",
           "request": {
             "method": "PATCH",
@@ -1565,7 +2199,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"establishmentId\": {{establishmentId}},\n  \"serviceId\": {{serviceId}},\n  \"startAt\": \"{{inicioAgendamento}}\",\n  \"petName\": \"Rex\"\n}",
+              "raw": "{\n  \"establishmentId\": {{establishmentId}},\n  \"serviceId\": {{serviceId}},\n  \"startAt\": \"{{inicioAgendamento}}\",\n  \"petId\": {{petId}}\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1580,7 +2214,8 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('status 201', function () { pm.response.to.have.status(201); });",
-                  "pm.collectionVariables.set('appointmentId', pm.response.json().id);"
+                  "pm.collectionVariables.set('appointmentId', pm.response.json().id);",
+                  "pm.test('usa os dados do pet', function () { pm.expect(pm.response.json().petName).to.eql('Mingau'); pm.expect(pm.response.json().petSpecies).to.eql('GATO'); });"
                 ]
               }
             }
@@ -1613,7 +2248,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"establishmentId\": {{establishmentId}},\n  \"serviceId\": {{serviceId}},\n  \"startAt\": \"{{inicioAgendamento}}\",\n  \"petName\": \"Rex\"\n}",
+              "raw": "{\n  \"establishmentId\": {{establishmentId}},\n  \"serviceId\": {{serviceId}},\n  \"startAt\": \"{{inicioAgendamento}}\",\n  \"petId\": {{petId}}\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1628,6 +2263,88 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('status 409', function () { pm.response.to.have.status(409); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Prestador agendando (403)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenPrestador}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ws/agenda/appointments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ws",
+                "agenda",
+                "appointments"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"establishmentId\": {{establishmentId}},\n  \"serviceId\": {{serviceId}},\n  \"startAt\": \"{{inicioAgendamento}}\",\n  \"petId\": {{petId}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 403', function () { pm.response.to.have.status(403); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Detalhe do agendamento",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenCliente}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ws/agenda/appointments/{{appointmentId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ws",
+                "agenda",
+                "appointments",
+                "{{appointmentId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', function () { pm.response.to.have.status(200); });"
                 ]
               }
             }
@@ -1976,6 +2693,14 @@
     },
     {
       "key": "inicioAgendamento",
+      "value": ""
+    },
+    {
+      "key": "petId",
+      "value": ""
+    },
+    {
+      "key": "petExtraId",
       "value": ""
     }
   ]
