@@ -16,6 +16,11 @@ Backend do Projeto Integrador de um pet shop, feito com Java 25 e Spring Boot 4,
 
 O Consul (porta 8500) é usado para o registro dos serviços e para as configurações. Os serviços se comunicam pelo nome registrado no Consul (`lb://nome-do-servico`).
 
+Documentação completa:
+
+- [docs/ARQUITETURA.md](docs/ARQUITETURA.md): diagrama da arquitetura, responsabilidades, comunicação e resiliência, autenticação, configuração, observabilidade e decisões tomadas.
+- [docs/ENDPOINTS.md](docs/ENDPOINTS.md): todos os endpoints com método, caminho, finalidade e cURL.
+
 ## Tipos de usuário
 
 - 1 = Cliente: carrinho, checkout, pagamento e cancelamento de pedido, endereços, pets e agendamentos.
@@ -137,7 +142,7 @@ Pagamentos (payment-api):
 | GET /internal/addresses/{id}?userId= | auth-api | O order-api busca o endereço de entrega no checkout |
 | POST /internal/products/stock/reserve | product-api | O order-api reserva o estoque no checkout |
 | POST /internal/products/stock/release | product-api | O order-api devolve o estoque ao cancelar |
-| GET /internal/establishments/by-provider/{providerId} | agenda-api | O product-api e o order-api descobrem o pet shop do prestador |
+| GET /internal/establishments/by-provider/{providerId} | agenda-api | O product-api descobre o pet shop do prestador ao cadastrar produto |
 | POST /internal/payments | payment-api | O order-api e a agenda-api registram o pagamento |
 
 ## Fluxo de compra
