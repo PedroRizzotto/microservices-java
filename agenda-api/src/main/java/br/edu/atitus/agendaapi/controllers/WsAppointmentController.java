@@ -1,10 +1,11 @@
 package br.edu.atitus.agendaapi.controllers;
 
 import br.edu.atitus.agendaapi.dtos.AppointmentRequest;
+import br.edu.atitus.agendaapi.dtos.AppointmentResponse;
 import br.edu.atitus.agendaapi.dtos.PayRequest;
-import br.edu.atitus.agendaapi.entities.AppointmentEntity;
 import br.edu.atitus.agendaapi.services.AppointmentService;
 import br.edu.atitus.agendaapi.servicesimpl.AuthorizationService;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort.Direction;
@@ -25,70 +26,70 @@ public class WsAppointmentController {
     }
 
     @PostMapping
-    public ResponseEntity<AppointmentEntity> postAppointment(
+    public ResponseEntity<AppointmentResponse> postAppointment(
             @RequestBody AppointmentRequest dto,
             @RequestHeader("X-User-Id") Long userId,
             @RequestHeader("X-User-Email") String userEmail,
             @RequestHeader("X-User-Type") Integer userType) {
         authService.requireCustomer(userType);
-        return ResponseEntity.status(201).body(service.book(userId, userEmail, dto));
+        return ResponseEntity.status(201).body(AppointmentResponse.from(service.book(userId, userEmail, dto)));
     }
 
     @GetMapping
-    public ResponseEntity<Page<AppointmentEntity>> getMine(
+    public ResponseEntity<Page<AppointmentResponse>> getMine(
             @PageableDefault(page = 0, size = 10, sort = "startAt", direction = Direction.ASC) Pageable pageable,
             @RequestHeader("X-User-Id") Long userId,
             @RequestHeader("X-User-Email") String userEmail,
             @RequestHeader("X-User-Type") Integer userType) {
         authService.requireCustomer(userType);
-        return ResponseEntity.ok(service.findMine(userId, pageable));
+        return ResponseEntity.ok(service.findMine(userId, pageable).map(AppointmentResponse::from));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<AppointmentEntity> getOne(
+    public ResponseEntity<AppointmentResponse> getOne(
             @PathVariable Long id,
             @RequestHeader("X-User-Id") Long userId,
             @RequestHeader("X-User-Type") Integer userType) {
-        return ResponseEntity.ok(service.getOne(id, userId));
+        return ResponseEntity.ok(AppointmentResponse.from(service.getOne(id, userId)));
     }
 
     @GetMapping("/received")
-    public ResponseEntity<Page<AppointmentEntity>> getReceived(
+    public ResponseEntity<Page<AppointmentResponse>> getReceived(
             @PageableDefault(page = 0, size = 10, sort = "startAt", direction = Direction.ASC) Pageable pageable,
             @RequestHeader("X-User-Id") Long userId,
             @RequestHeader("X-User-Email") String userEmail,
             @RequestHeader("X-User-Type") Integer userType) {
         authService.requireProvider(userType);
-        return ResponseEntity.ok(service.findReceived(userId, pageable));
+        return ResponseEntity.ok(service.findReceived(userId, pageable).map(AppointmentResponse::from));
     }
 
     @PatchMapping("/{id}/cancel")
-    public ResponseEntity<AppointmentEntity> cancel(
+    public ResponseEntity<AppointmentResponse> cancel(
             @PathVariable Long id,
             @RequestHeader("X-User-Id") Long userId,
             @RequestHeader("X-User-Email") String userEmail,
             @RequestHeader("X-User-Type") Integer userType) {
-        return ResponseEntity.ok(service.cancel(id, userId));
+        return ResponseEntity.ok(AppointmentResponse.from(service.cancel(id, userId)));
     }
 
     @PostMapping("/{id}/pay")
-    public ResponseEntity<AppointmentEntity> pay(
+    public ResponseEntity<AppointmentResponse> pay(
             @PathVariable Long id,
             @RequestBody PayRequest dto,
             @RequestHeader("X-User-Id") Long userId,
             @RequestHeader("X-User-Email") String userEmail,
             @RequestHeader("X-User-Type") Integer userType) {
         authService.requireCustomer(userType);
-        return ResponseEntity.ok(service.pay(userId, id, dto.method()));
+        return ResponseEntity.ok(AppointmentResponse.from(service.pay(userId, id, dto.method())));
     }
 
     @PatchMapping("/{id}/complete")
-    public ResponseEntity<AppointmentEntity> complete(
+    public ResponseEntity<AppointmentResponse> complete(
             @PathVariable Long id,
             @RequestHeader("X-User-Id") Long userId,
             @RequestHeader("X-User-Email") String userEmail,
             @RequestHeader("X-User-Type") Integer userType) {
         authService.requireProvider(userType);
-        return ResponseEntity.ok(service.complete(userId, id));
+        return ResponseEntity.ok(AppointmentResponse.from(service.complete(userId, id)));
     }
 }

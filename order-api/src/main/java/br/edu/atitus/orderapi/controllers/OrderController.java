@@ -2,7 +2,7 @@ package br.edu.atitus.orderapi.controllers;
 
 import br.edu.atitus.orderapi.dtos.OrderStatusRequest;
 import br.edu.atitus.orderapi.dtos.PayOrderRequest;
-import br.edu.atitus.orderapi.entities.OrderEntity;
+import br.edu.atitus.orderapi.dtos.OrderResponse;
 import br.edu.atitus.orderapi.entities.OrderStatus;
 import br.edu.atitus.orderapi.services.OrderService;
 import br.edu.atitus.orderapi.servicesimpl.AuthorizationService;
@@ -28,72 +28,72 @@ public class OrderController {
     }
 
     @GetMapping
-    public ResponseEntity<Page<OrderEntity>> listMine(
+    public ResponseEntity<Page<OrderResponse>> listMine(
             @RequestParam(defaultValue = "BRL") String targetCurrency,
             @PageableDefault(size = 5, sort = "orderDate", direction = Direction.DESC) Pageable pageable,
             @RequestHeader("X-User-Id") Long userId,
             @RequestHeader("X-User-Type") Integer userType) {
         authorization.requireCustomer(userType);
-        return ResponseEntity.ok(orderService.listMine(userId, targetCurrency.toUpperCase(), pageable));
+        return ResponseEntity.ok(orderService.listMine(userId, targetCurrency.toUpperCase(), pageable).map(OrderResponse::from));
     }
 
     @GetMapping("/received")
-    public ResponseEntity<Page<OrderEntity>> listReceived(
+    public ResponseEntity<Page<OrderResponse>> listReceived(
             @RequestParam(required = false) String status,
             @PageableDefault(size = 10, sort = "orderDate", direction = Direction.DESC) Pageable pageable,
             @RequestHeader("X-User-Id") Long userId,
             @RequestHeader("X-User-Type") Integer userType) {
         authorization.requireProvider(userType);
-        return ResponseEntity.ok(orderService.listReceived(userId, parseStatus(status, false), pageable));
+        return ResponseEntity.ok(orderService.listReceived(userId, parseStatus(status, false), pageable).map(OrderResponse::from));
     }
 
     @GetMapping("/received/{id}")
-    public ResponseEntity<OrderEntity> getReceived(
+    public ResponseEntity<OrderResponse> getReceived(
             @PathVariable Long id,
             @RequestParam(defaultValue = "BRL") String targetCurrency,
             @RequestHeader("X-User-Id") Long userId,
             @RequestHeader("X-User-Type") Integer userType) {
         authorization.requireProvider(userType);
-        return ResponseEntity.ok(orderService.getReceived(userId, id, targetCurrency.toUpperCase()));
+        return ResponseEntity.ok(OrderResponse.from(orderService.getReceived(userId, id, targetCurrency.toUpperCase())));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<OrderEntity> getMine(
+    public ResponseEntity<OrderResponse> getMine(
             @PathVariable Long id,
             @RequestParam(defaultValue = "BRL") String targetCurrency,
             @RequestHeader("X-User-Id") Long userId,
             @RequestHeader("X-User-Type") Integer userType) {
         authorization.requireCustomer(userType);
-        return ResponseEntity.ok(orderService.getMine(userId, id, targetCurrency.toUpperCase()));
+        return ResponseEntity.ok(OrderResponse.from(orderService.getMine(userId, id, targetCurrency.toUpperCase())));
     }
 
     @PostMapping("/{id}/pay")
-    public ResponseEntity<OrderEntity> pay(
+    public ResponseEntity<OrderResponse> pay(
             @PathVariable Long id,
             @RequestBody PayOrderRequest request,
             @RequestHeader("X-User-Id") Long userId,
             @RequestHeader("X-User-Type") Integer userType) {
         authorization.requireCustomer(userType);
-        return ResponseEntity.ok(orderService.pay(userId, id, request.method()));
+        return ResponseEntity.ok(OrderResponse.from(orderService.pay(userId, id, request.method())));
     }
 
     @PatchMapping("/{id}/cancel")
-    public ResponseEntity<OrderEntity> cancel(
+    public ResponseEntity<OrderResponse> cancel(
             @PathVariable Long id,
             @RequestHeader("X-User-Id") Long userId,
             @RequestHeader("X-User-Type") Integer userType) {
         authorization.requireCustomer(userType);
-        return ResponseEntity.ok(orderService.cancel(userId, id));
+        return ResponseEntity.ok(OrderResponse.from(orderService.cancel(userId, id)));
     }
 
     @PatchMapping("/{id}/status")
-    public ResponseEntity<OrderEntity> updateStatus(
+    public ResponseEntity<OrderResponse> updateStatus(
             @PathVariable Long id,
             @RequestBody OrderStatusRequest request,
             @RequestHeader("X-User-Id") Long userId,
             @RequestHeader("X-User-Type") Integer userType) {
         authorization.requireProvider(userType);
-        return ResponseEntity.ok(orderService.updateStatus(userId, id, parseStatus(request.status(), true)));
+        return ResponseEntity.ok(OrderResponse.from(orderService.updateStatus(userId, id, parseStatus(request.status(), true))));
     }
 
     private OrderStatus parseStatus(String value, boolean required) {

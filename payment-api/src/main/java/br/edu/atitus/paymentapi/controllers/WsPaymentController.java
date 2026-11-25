@@ -1,6 +1,6 @@
 package br.edu.atitus.paymentapi.controllers;
 
-import br.edu.atitus.paymentapi.entities.PaymentEntity;
+import br.edu.atitus.paymentapi.dtos.PaymentResponse;
 import br.edu.atitus.paymentapi.services.PaymentService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -20,9 +20,9 @@ public class WsPaymentController {
     }
 
     @GetMapping
-    public ResponseEntity<Page<PaymentEntity>> getMine(
+    public ResponseEntity<Page<PaymentResponse>> getMine(
             @PageableDefault(page = 0, size = 10, sort = "createdAt", direction = Direction.DESC) Pageable pageable,
             @RequestHeader("X-User-Id") Long userId) {
-        return ResponseEntity.ok(service.listMine(userId, pageable));
+        return ResponseEntity.ok(service.listMine(userId, pageable).map(PaymentResponse::from));
     }
 }

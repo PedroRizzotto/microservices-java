@@ -12,8 +12,6 @@ public record ProductResponse(
         int stock,
         String image,
         Long establishmentId,
-
-        String environment,
         String promotionMessage,
         String targetCurrency,
         double convertedPrice

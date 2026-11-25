@@ -52,7 +52,7 @@ public class EstablishmentServiceJpa implements EstablishmentService {
     @Override
     public EstablishmentEntity findMine(Long providerId) {
         return establishmentRepository.findByProviderId(providerId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cadastre o estabelecimento primeiro"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Cadastre o estabelecimento primeiro"));
     }
 
     @Override

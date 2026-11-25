@@ -14,13 +14,11 @@ public record ProductResponse(
         int stock,
         String image,
         Long establishmentId,
-
-        String environment,
         String promotionMessage,
         String targetCurrency,
         double convertedPrice
 ) {
-    public static ProductResponse fromEntity(ProductEntity entity, String environment, String promotionMessage, String targetCurrency, double convertedPrice) {
+    public static ProductResponse fromEntity(ProductEntity entity, String promotionMessage, String targetCurrency, double convertedPrice) {
         return new ProductResponse(
                 entity.getId(),
                 entity.getName(),
@@ -33,7 +31,6 @@ public record ProductResponse(
                 entity.getStock(),
                 entity.getImage(),
                 entity.getEstablishmentId(),
-                environment,
                 promotionMessage,
                 targetCurrency,
                 convertedPrice

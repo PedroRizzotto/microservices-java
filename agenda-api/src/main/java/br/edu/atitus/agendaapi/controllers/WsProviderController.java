@@ -1,13 +1,14 @@
 package br.edu.atitus.agendaapi.controllers;
 
 import br.edu.atitus.agendaapi.dtos.AvailabilityRequest;
+import br.edu.atitus.agendaapi.dtos.AvailabilityResponse;
 import br.edu.atitus.agendaapi.dtos.EstablishmentRequest;
+import br.edu.atitus.agendaapi.dtos.EstablishmentResponse;
 import br.edu.atitus.agendaapi.dtos.PetServiceRequest;
-import br.edu.atitus.agendaapi.entities.AvailabilityEntity;
-import br.edu.atitus.agendaapi.entities.EstablishmentEntity;
-import br.edu.atitus.agendaapi.entities.PetServiceEntity;
+import br.edu.atitus.agendaapi.dtos.PetServiceResponse;
 import br.edu.atitus.agendaapi.services.EstablishmentService;
 import br.edu.atitus.agendaapi.servicesimpl.AuthorizationService;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -26,43 +27,43 @@ public class WsProviderController {
     }
 
     @PutMapping("/establishment")
-    public ResponseEntity<EstablishmentEntity> putEstablishment(
+    public ResponseEntity<EstablishmentResponse> putEstablishment(
             @RequestBody EstablishmentRequest dto,
             @RequestHeader("X-User-Id") Long userId,
             @RequestHeader("X-User-Email") String userEmail,
             @RequestHeader("X-User-Type") Integer userType) {
         authService.requireProvider(userType);
-        return ResponseEntity.ok(service.saveMine(userId, dto));
+        return ResponseEntity.ok(EstablishmentResponse.from(service.saveMine(userId, dto)));
     }
 
     @GetMapping("/establishment")
-    public ResponseEntity<EstablishmentEntity> getEstablishment(
+    public ResponseEntity<EstablishmentResponse> getEstablishment(
             @RequestHeader("X-User-Id") Long userId,
             @RequestHeader("X-User-Email") String userEmail,
             @RequestHeader("X-User-Type") Integer userType) {
         authService.requireProvider(userType);
-        return ResponseEntity.ok(service.findMine(userId));
+        return ResponseEntity.ok(EstablishmentResponse.from(service.findMine(userId)));
     }
 
     @PostMapping("/services")
-    public ResponseEntity<PetServiceEntity> postService(
+    public ResponseEntity<PetServiceResponse> postService(
             @RequestBody PetServiceRequest dto,
             @RequestHeader("X-User-Id") Long userId,
             @RequestHeader("X-User-Email") String userEmail,
             @RequestHeader("X-User-Type") Integer userType) {
         authService.requireProvider(userType);
-        return ResponseEntity.status(201).body(service.addService(userId, dto));
+        return ResponseEntity.status(201).body(PetServiceResponse.from(service.addService(userId, dto)));
     }
 
     @PutMapping("/services/{id}")
-    public ResponseEntity<PetServiceEntity> putService(
+    public ResponseEntity<PetServiceResponse> putService(
             @PathVariable Long id,
             @RequestBody PetServiceRequest dto,
             @RequestHeader("X-User-Id") Long userId,
             @RequestHeader("X-User-Email") String userEmail,
             @RequestHeader("X-User-Type") Integer userType) {
         authService.requireProvider(userType);
-        return ResponseEntity.ok(service.updateService(userId, id, dto));
+        return ResponseEntity.ok(PetServiceResponse.from(service.updateService(userId, id, dto)));
     }
 
     @DeleteMapping("/services/{id}")
@@ -77,21 +78,21 @@ public class WsProviderController {
     }
 
     @PutMapping("/availability")
-    public ResponseEntity<List<AvailabilityEntity>> putAvailability(
+    public ResponseEntity<List<AvailabilityResponse>> putAvailability(
             @RequestBody List<AvailabilityRequest> dto,
             @RequestHeader("X-User-Id") Long userId,
             @RequestHeader("X-User-Email") String userEmail,
             @RequestHeader("X-User-Type") Integer userType) {
         authService.requireProvider(userType);
-        return ResponseEntity.ok(service.replaceAvailability(userId, dto));
+        return ResponseEntity.ok(service.replaceAvailability(userId, dto).stream().map(AvailabilityResponse::from).toList());
     }
 
     @GetMapping("/availability")
-    public ResponseEntity<List<AvailabilityEntity>> getAvailability(
+    public ResponseEntity<List<AvailabilityResponse>> getAvailability(
             @RequestHeader("X-User-Id") Long userId,
             @RequestHeader("X-User-Email") String userEmail,
             @RequestHeader("X-User-Type") Integer userType) {
         authService.requireProvider(userType);
-        return ResponseEntity.ok(service.listAvailability(service.findMine(userId).getId()));
+        return ResponseEntity.ok(service.listAvailability(service.findMine(userId).getId()).stream().map(AvailabilityResponse::from).toList());
     }
 }

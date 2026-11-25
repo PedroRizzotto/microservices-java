@@ -1,7 +1,7 @@
 package br.edu.atitus.productapi.controllers;
 
 import br.edu.atitus.productapi.dtos.ProductRequest;
-import br.edu.atitus.productapi.entities.ProductEntity;
+import br.edu.atitus.productapi.dtos.ProviderProductResponse;
 import br.edu.atitus.productapi.services.ProductService;
 import br.edu.atitus.productapi.servicesimpl.AuthorizationService;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -23,18 +23,18 @@ public class WsProductController {
     }
 
     @PostMapping
-    public ResponseEntity<ProductEntity> postProduct(
+    public ResponseEntity<ProviderProductResponse> postProduct(
             @RequestBody ProductRequest dto,
             @RequestHeader("X-User-Id") Long userId,
             @RequestHeader("X-User-Type") Integer userType) {
 
         authService.requireProvider(userType);
 
-        return ResponseEntity.status(201).body(service.create(userId, dto));
+        return ResponseEntity.status(201).body(ProviderProductResponse.from(service.create(userId, dto)));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ProductEntity> putProduct(
+    public ResponseEntity<ProviderProductResponse> putProduct(
             @PathVariable Long id,
             @RequestBody ProductRequest dto,
             @RequestHeader("X-User-Id") Long userId,
@@ -42,7 +42,7 @@ public class WsProductController {
 
         authService.requireProvider(userType);
 
-        return ResponseEntity.ok(service.update(userId, id, dto));
+        return ResponseEntity.ok(ProviderProductResponse.from(service.update(userId, id, dto)));
     }
 
     @DeleteMapping("/{id}")
@@ -58,13 +58,13 @@ public class WsProductController {
     }
 
     @GetMapping("/mine")
-    public ResponseEntity<Page<ProductEntity>> getMine(
+    public ResponseEntity<Page<ProviderProductResponse>> getMine(
             @RequestHeader("X-User-Id") Long userId,
             @RequestHeader("X-User-Type") Integer userType,
             @PageableDefault(size = 10, sort = "name", page = 0) Pageable pageable) {
 
         authService.requireProvider(userType);
 
-        return ResponseEntity.ok(service.findMine(userId, pageable));
+        return ResponseEntity.ok(service.findMine(userId, pageable).map(ProviderProductResponse::from));
     }
 }

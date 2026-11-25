@@ -1,6 +1,5 @@
 package br.edu.atitus.productapi.servicesimpl;
 
-import java.util.List;
 import br.edu.atitus.productapi.clients.AgendaClient;
 import br.edu.atitus.productapi.components.ProductRules;
 import br.edu.atitus.productapi.dtos.ProductRequest;
@@ -8,19 +7,26 @@ import br.edu.atitus.productapi.dtos.ProductResponse;
 import br.edu.atitus.productapi.entities.ProductEntity;
 import br.edu.atitus.productapi.repositories.ProductRepository;
 import br.edu.atitus.productapi.services.ProductService;
+
 import jakarta.persistence.EntityNotFoundException;
-import org.springframework.data.jpa.domain.Specification;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.server.ResponseStatusException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.util.List;
 
 @Service
 public class ProductServiceJpa implements ProductService {
+
+    private static final Logger log = LoggerFactory.getLogger(ProductServiceJpa.class);
 
     private final ProductRepository repository;
     private final CurrencyClientService currencyClientService;
@@ -35,13 +41,10 @@ public class ProductServiceJpa implements ProductService {
         this.agendaClient = agendaClient;
     }
 
-    @Value("${server.port:8080}")
-    private String serverPort;
-
     @Value("${app.promotion.message:Nenhuma Promoção Ativa}")
     private String promotionMessage;
 
-    private ProductResponse getResponse(ProductEntity entity, String environment, String targetCurrency){
+    private ProductResponse getResponse(ProductEntity entity, String targetCurrency){
         double convertedValue = entity.getPrice();
         if (! entity.getCurrency().equalsIgnoreCase(targetCurrency)) {
             //Aqui vai fazer a comunicação com o microservice currency-api
@@ -51,15 +54,13 @@ public class ProductServiceJpa implements ProductService {
                         targetCurrency
                 );
                 convertedValue = entity.getPrice() * currency.conversionRate();
-                environment += " - " + currency.environment();
             } catch (Exception e) {
                 convertedValue = -1;
-                environment += " - ERROR: " + e.getMessage();
+                log.warn("Falha ao converter o preço do produto {} para {}", entity.getId(), targetCurrency, e);
             }
         }
         return ProductResponse.fromEntity(
                 entity,
-                environment,
                 promotionMessage,
                 targetCurrency,
                 convertedValue
@@ -72,9 +73,7 @@ public class ProductServiceJpa implements ProductService {
         var product = repository.findById(id)
                 .filter(ProductEntity::isActive)
                 .orElseThrow(() -> new EntityNotFoundException("Produto não encontrado"));
-        String environment = "Product API running in port " + serverPort;
-
-        return getResponse(product, environment, targetCurrency);
+        return getResponse(product, targetCurrency);
     }
 
     @Override
@@ -88,9 +87,8 @@ public class ProductServiceJpa implements ProductService {
         if (category != null && !category.isBlank())
             spec = spec.and((root, query, cb) -> cb.equal(root.get("category"), category.trim().toLowerCase()));
 
-        String environment = "Product API running in port " + serverPort;
         return repository.findAll(spec, pageable)
-                .map(entity -> getResponse(entity, environment, targetCurrency));
+                .map(entity -> getResponse(entity, targetCurrency));
     }
 
     private static String normalizeCategory(String category) {

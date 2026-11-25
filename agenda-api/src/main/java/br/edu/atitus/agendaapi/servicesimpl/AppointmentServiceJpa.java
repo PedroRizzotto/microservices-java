@@ -131,7 +131,7 @@ public class AppointmentServiceJpa implements AppointmentService {
     @Override
     public Page<AppointmentEntity> findReceived(Long providerId, Pageable pageable) {
         EstablishmentEntity establishment = establishmentRepository.findByProviderId(providerId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cadastre o estabelecimento primeiro"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Cadastre o estabelecimento primeiro"));
         return appointmentRepository.findByEstablishmentId(establishment.getId(), pageable);
     }
 
@@ -181,7 +181,7 @@ public class AppointmentServiceJpa implements AppointmentService {
     @Transactional
     public AppointmentEntity complete(Long providerId, Long appointmentId) {
         EstablishmentEntity establishment = establishmentRepository.findByProviderId(providerId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cadastre o estabelecimento primeiro"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Cadastre o estabelecimento primeiro"));
         AppointmentEntity appointment = appointmentRepository.findById(appointmentId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Agendamento não encontrado"));
         AppointmentRules.requireCompletable(appointment, establishment.getId());

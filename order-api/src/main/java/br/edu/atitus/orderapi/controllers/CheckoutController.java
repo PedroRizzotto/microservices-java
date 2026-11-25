@@ -1,7 +1,7 @@
 package br.edu.atitus.orderapi.controllers;
 
 import br.edu.atitus.orderapi.dtos.CheckoutRequest;
-import br.edu.atitus.orderapi.entities.OrderEntity;
+import br.edu.atitus.orderapi.dtos.OrderResponse;
 import br.edu.atitus.orderapi.services.CheckoutService;
 import br.edu.atitus.orderapi.servicesimpl.AuthorizationService;
 import org.springframework.http.HttpStatus;
@@ -22,7 +22,7 @@ public class CheckoutController {
     }
 
     @PostMapping
-    public ResponseEntity<OrderEntity> checkout(
+    public ResponseEntity<OrderResponse> checkout(
             @RequestBody CheckoutRequest request,
             @RequestHeader("X-User-Id") Long userId,
             @RequestHeader("X-User-Email") String userEmail,
@@ -30,6 +30,6 @@ public class CheckoutController {
         authorization.requireCustomer(userType);
         if (request.addressId() == null)
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Endereço obrigatório");
-        return ResponseEntity.status(HttpStatus.CREATED).body(checkoutService.checkout(userId, userEmail, request.addressId()));
+        return ResponseEntity.status(HttpStatus.CREATED).body(OrderResponse.from(checkoutService.checkout(userId, userEmail, request.addressId())));
     }
 }

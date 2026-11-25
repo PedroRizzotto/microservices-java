@@ -23,11 +23,11 @@ A ordem das seções segue o fluxo de uso: cadastro e login, prestador monta o p
 | PUT | `/ws/auth/addresses/{addressId}` | cliente | auth-api | Altera um endereço do usuário. |
 | DELETE | `/ws/auth/addresses/{addressId}` | qualquer usuário logado | auth-api | Remove um endereço. |
 | PUT | `/ws/agenda/establishment` | prestador | agenda-api | Cria ou altera o pet shop do prestador. |
-| GET | `/ws/agenda/establishment` | prestador | agenda-api | Retorna o pet shop do prestador. |
-| POST | `/ws/agenda/services` | prestador | agenda-api | Cadastra um serviço do pet shop. |
+| GET | `/ws/agenda/establishment` | prestador | agenda-api | Retorna o pet shop do prestador (404 se ainda não cadastrou). |
+| POST | `/ws/agenda/services` | prestador | agenda-api | Cadastra um serviço do pet shop (404 se o pet shop ainda não foi cadastrado). |
 | PUT | `/ws/agenda/services/{serviceId}` | prestador | agenda-api | Altera um serviço. Agendamentos já feitos mantêm o preço da reserva. |
-| PUT | `/ws/agenda/availability` | prestador | agenda-api | Substitui a grade de atendimento. dayOfWeek vai de 1 (segunda) a 7 (domingo). |
-| GET | `/ws/agenda/availability` | prestador | agenda-api | Retorna a grade de atendimento. |
+| PUT | `/ws/agenda/availability` | prestador | agenda-api | Substitui a grade de atendimento. dayOfWeek vai de 1 (segunda) a 7 (domingo). 404 se o pet shop ainda não foi cadastrado. |
+| GET | `/ws/agenda/availability` | prestador | agenda-api | Retorna a grade de atendimento (404 se o pet shop ainda não foi cadastrado). |
 | DELETE | `/ws/agenda/services/{serviceId}` | prestador | agenda-api | Remove um serviço. |
 | GET | `/agenda/establishments` | pública | agenda-api | Lista os pet shops, paginado (`page`, `size`). |
 | GET | `/agenda/establishments/{establishmentId}` | pública | agenda-api | Dados de um pet shop. |

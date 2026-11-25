@@ -1,6 +1,6 @@
 package br.edu.atitus.authapi.controllers;
 
-import br.edu.atitus.authapi.entities.AddressEntity;
+import br.edu.atitus.authapi.dtos.AddressResponse;
 import br.edu.atitus.authapi.services.AddressService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,7 +16,7 @@ public class InternalAddressController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<AddressEntity> getAddress(@PathVariable Long id, @RequestParam Long userId) {
-        return ResponseEntity.ok(service.getForUser(id, userId));
+    public ResponseEntity<AddressResponse> getAddress(@PathVariable Long id, @RequestParam Long userId) {
+        return ResponseEntity.ok(AddressResponse.from(service.getForUser(id, userId)));
     }
 }

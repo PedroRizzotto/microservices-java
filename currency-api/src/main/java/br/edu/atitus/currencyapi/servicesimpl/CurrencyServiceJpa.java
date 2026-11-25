@@ -3,12 +3,17 @@ package br.edu.atitus.currencyapi.servicesimpl;
 import br.edu.atitus.currencyapi.dtos.CurrencyResponse;
 import br.edu.atitus.currencyapi.repositories.CurrencyRepository;
 import br.edu.atitus.currencyapi.services.CurrencyService;
+
 import jakarta.persistence.EntityNotFoundException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Service
 public class CurrencyServiceJpa implements CurrencyService {
+
+    private static final Logger log = LoggerFactory.getLogger(CurrencyServiceJpa.class);
 
     private final CurrencyRepository repository;
     private final BcbClientService bcbClientService;
@@ -19,9 +24,6 @@ public class CurrencyServiceJpa implements CurrencyService {
         this.repository = repository;
         this.bcbClientService = bcbClientService;
     }
-
-    @Value("${server.port:8100}")
-    private String serverPort;
 
     @Value("${app.bcb.data-cotacao:10-15-2026}")
     private String dataCotacao;
@@ -34,8 +36,6 @@ public class CurrencyServiceJpa implements CurrencyService {
 
     @Override
     public CurrencyResponse findBySourceCurrencyAndTargetCurrency(String sourceCurrency, String targetCurrency) throws Exception {
-        String environment = "Currency API running in Port: " + serverPort;
-
         //Primeiro tenta pegar a cotação no Banco Central
         String fallbackReason;
         try {
@@ -45,8 +45,7 @@ public class CurrencyServiceJpa implements CurrencyService {
                 return new CurrencyResponse(
                         sourceCurrency,
                         targetCurrency,
-                        sourceRate / targetRate,
-                        environment + " - BCB"
+                        sourceRate / targetRate
                 );
             }
             fallbackReason = "sem cotação no BCB";
@@ -57,6 +56,7 @@ public class CurrencyServiceJpa implements CurrencyService {
         //Fallback: cotação cadastrada no banco local
         var currency = repository.findBySourceCurrencyAndTargetCurrency(sourceCurrency, targetCurrency)
                 .orElseThrow(() -> new EntityNotFoundException("Cotação não encontrada"));
-        return CurrencyResponse.fromEntity(currency, environment + " - Local DB (" + fallbackReason + ")");
+        log.info("Cotação {}->{} obtida do banco local ({})", sourceCurrency, targetCurrency, fallbackReason);
+        return CurrencyResponse.fromEntity(currency);
     }
 }

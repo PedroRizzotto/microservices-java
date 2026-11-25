@@ -1,6 +1,7 @@
 package br.edu.atitus.paymentapi.controllers;
 
 import br.edu.atitus.paymentapi.dtos.PaymentRequest;
+import br.edu.atitus.paymentapi.dtos.PaymentResponse;
 import br.edu.atitus.paymentapi.entities.PaymentEntity;
 import br.edu.atitus.paymentapi.services.PaymentService;
 import org.springframework.http.ResponseEntity;
@@ -17,9 +18,9 @@ public class InternalPaymentController {
     }
 
     @PostMapping
-    public ResponseEntity<PaymentEntity> pay(@RequestBody PaymentRequest dto) {
+    public ResponseEntity<PaymentResponse> pay(@RequestBody PaymentRequest dto) {
         boolean existed = service.exists(dto);
         PaymentEntity payment = service.pay(dto);
-        return ResponseEntity.status(existed ? 200 : 201).body(payment);
+        return ResponseEntity.status(existed ? 200 : 201).body(PaymentResponse.from(payment));
     }
 }

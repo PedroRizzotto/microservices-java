@@ -1,9 +1,10 @@
 package br.edu.atitus.agendaapi.controllers;
 
-import br.edu.atitus.agendaapi.entities.EstablishmentEntity;
-import br.edu.atitus.agendaapi.entities.PetServiceEntity;
+import br.edu.atitus.agendaapi.dtos.EstablishmentResponse;
+import br.edu.atitus.agendaapi.dtos.PetServiceResponse;
 import br.edu.atitus.agendaapi.services.AppointmentService;
 import br.edu.atitus.agendaapi.services.EstablishmentService;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -26,19 +27,19 @@ public class AgendaController {
     }
 
     @GetMapping
-    public ResponseEntity<Page<EstablishmentEntity>> getAll(
+    public ResponseEntity<Page<EstablishmentResponse>> getAll(
             @PageableDefault(size = 10, sort = "name", page = 0) Pageable pageable) {
-        return ResponseEntity.ok(establishmentService.findAll(pageable));
+        return ResponseEntity.ok(establishmentService.findAll(pageable).map(EstablishmentResponse::from));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<EstablishmentEntity> getById(@PathVariable Long id) {
-        return ResponseEntity.ok(establishmentService.getById(id));
+    public ResponseEntity<EstablishmentResponse> getById(@PathVariable Long id) {
+        return ResponseEntity.ok(EstablishmentResponse.from(establishmentService.getById(id)));
     }
 
     @GetMapping("/{id}/services")
-    public ResponseEntity<List<PetServiceEntity>> getServices(@PathVariable Long id) {
-        return ResponseEntity.ok(establishmentService.listActiveServices(id));
+    public ResponseEntity<List<PetServiceResponse>> getServices(@PathVariable Long id) {
+        return ResponseEntity.ok(establishmentService.listActiveServices(id).stream().map(PetServiceResponse::from).toList());
     }
 
     @GetMapping("/{id}/slots")

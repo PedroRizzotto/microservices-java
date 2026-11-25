@@ -4,7 +4,7 @@ import br.edu.atitus.authapi.dtos.AddressRequest;
 import br.edu.atitus.authapi.dtos.ChangePasswordRequest;
 import br.edu.atitus.authapi.dtos.UpdateMeRequest;
 import br.edu.atitus.authapi.dtos.MeResponse;
-import br.edu.atitus.authapi.entities.AddressEntity;
+import br.edu.atitus.authapi.dtos.AddressResponse;
 import br.edu.atitus.authapi.entities.UserEntity;
 import br.edu.atitus.authapi.repositories.UserRepository;
 import br.edu.atitus.authapi.services.AddressService;
@@ -56,23 +56,23 @@ public class WsAuthController {
     }
 
     @GetMapping("/addresses")
-    public ResponseEntity<List<AddressEntity>> getAddresses(@RequestHeader("X-User-Id") Long userId) {
-        return ResponseEntity.ok(addressService.listMine(userId));
+    public ResponseEntity<List<AddressResponse>> getAddresses(@RequestHeader("X-User-Id") Long userId) {
+        return ResponseEntity.ok(addressService.listMine(userId).stream().map(AddressResponse::from).toList());
     }
 
     @PostMapping("/addresses")
-    public ResponseEntity<AddressEntity> postAddress(
+    public ResponseEntity<AddressResponse> postAddress(
             @RequestBody AddressRequest dto,
             @RequestHeader("X-User-Id") Long userId) {
-        return ResponseEntity.status(201).body(addressService.create(userId, dto));
+        return ResponseEntity.status(201).body(AddressResponse.from(addressService.create(userId, dto)));
     }
 
     @PutMapping("/addresses/{id}")
-    public ResponseEntity<AddressEntity> putAddress(
+    public ResponseEntity<AddressResponse> putAddress(
             @PathVariable Long id,
             @RequestBody AddressRequest dto,
             @RequestHeader("X-User-Id") Long userId) {
-        return ResponseEntity.ok(addressService.update(userId, id, dto));
+        return ResponseEntity.ok(AddressResponse.from(addressService.update(userId, id, dto)));
     }
 
     @DeleteMapping("/addresses/{id}")
